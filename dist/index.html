@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <div class="demo-ribbon" role="status">DEMO CÔNG KHAI · DỮ LIỆU HOÀN TOÀN GIẢ ĐỊNH</div>
+    <div class="demo-ribbon" role="status">SANDBOX DEMO · DỮ LIỆU THỬ CHỈ LƯU TRÊN TRÌNH DUYỆT NÀY</div>
     <div class="app-shell">
       <aside class="sidebar" aria-label="Điều hướng chính">
         <a class="brand" href="#dashboard" aria-label="HomeTechVN - Tổng quan">
@@ -28,7 +28,7 @@
         </nav>
         <div class="sidebar-note">
           <span class="status-dot"></span>
-          <div><strong>Chế độ chỉ xem</strong><small>Không kết nối dữ liệu thật</small></div>
+          <div><strong>Sandbox tương tác</strong><small>Không kết nối dữ liệu thật</small></div>
         </div>
       </aside>
 
@@ -45,9 +45,23 @@
               <span class="sr-only">Tìm trong bảng hiện tại</span>
               <input id="table-search" type="search" placeholder="Tìm dữ liệu demo…" />
             </label>
-            <button class="avatar-button" data-demo-action="Hồ sơ người dùng">AD</button>
+            <label class="role-picker">
+              <span>Vai trò</span>
+              <select id="role-select" aria-label="Chuyển vai trò thử nghiệm">
+                <option value="admin">Quản trị viên</option>
+                <option value="manager">Quản lý</option>
+                <option value="sales">Bán hàng</option>
+                <option value="technician">Kỹ thuật viên</option>
+              </select>
+            </label>
+            <button class="avatar-button" id="role-info" aria-label="Xem quyền vai trò hiện tại">AD</button>
           </div>
         </header>
+
+        <section class="sandbox-toolbar" aria-label="Trạng thái sandbox">
+          <div><span class="status-dot"></span><strong id="role-name">Quản trị viên</strong><span id="role-summary">Toàn quyền trong bản demo</span></div>
+          <div class="sandbox-actions"><span id="saved-count">0 bản ghi thử</span><button id="reset-demo" class="secondary-button">Khôi phục dữ liệu mẫu</button></div>
+        </section>
 
         <section class="module-panel active" data-panel="dashboard">
           <div class="metric-grid">
@@ -123,10 +137,24 @@
           <article class="card table-card"><div class="card-heading"><div><p class="eyebrow">Cơ cấu demo</p><h2>Hiệu quả theo nhóm</h2></div><button class="primary-button" data-demo-action="Xuất báo cáo">Xuất báo cáo</button></div><div class="table-wrap"><table><thead><tr><th>Nhóm</th><th>Doanh thu</th><th>Chi phí</th><th>Lợi nhuận</th><th>Tỷ trọng</th></tr></thead><tbody class="searchable-body"><tr><td>Bán laptop demo</td><td>156,2 triệu ₫</td><td>132,4 triệu ₫</td><td>23,8 triệu ₫</td><td>47,9%</td></tr><tr><td>Sửa chữa demo</td><td>74,6 triệu ₫</td><td>25,8 triệu ₫</td><td>48,8 triệu ₫</td><td>22,8%</td></tr><tr><td>Linh kiện demo</td><td>58,1 triệu ₫</td><td>46,7 triệu ₫</td><td>11,4 triệu ₫</td><td>17,8%</td></tr></tbody></table></div></article>
         </section>
 
-        <footer>HomeTechVN Public Demo · Không thu thập, lưu trữ hoặc gửi dữ liệu · Mọi tên, số liệu và mã đơn trên trang đều là giả định.</footer>
+        <footer>HomeTechVN Interactive Demo · Dữ liệu nhập thử chỉ lưu trong trình duyệt hiện tại · Không gửi lên máy chủ · Mọi tên, số liệu và mã đơn đều là giả định.</footer>
       </main>
     </div>
 
+    <div id="demo-modal" class="modal" hidden>
+      <div class="modal-backdrop" data-modal-close></div>
+      <section class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+        <header class="modal-heading">
+          <div><p class="eyebrow">Sandbox cục bộ</p><h2 id="modal-title">Thêm dữ liệu thử</h2></div>
+          <button class="icon-button" type="button" data-modal-close aria-label="Đóng">×</button>
+        </header>
+        <p id="modal-note" class="modal-note">Thông tin này chỉ được lưu trên trình duyệt của bạn.</p>
+        <form id="demo-form">
+          <div id="demo-form-fields" class="form-grid"></div>
+          <div class="modal-actions"><button class="secondary-button" type="button" data-modal-close>Hủy</button><button class="primary-button" type="submit">Lưu bản ghi thử</button></div>
+        </form>
+      </section>
+    </div>
     <div id="toast" class="toast" role="status" aria-live="polite"></div>
     <script src="./app.js" defer></script>
   </body>
