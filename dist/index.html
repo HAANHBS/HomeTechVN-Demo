@@ -1,0 +1,133 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#07101d" />
+    <meta name="description" content="Bản demo công khai giao diện quản lý bán hàng, sửa chữa và bảo hành HomeTechVN với dữ liệu hoàn toàn giả định." />
+    <title>HomeTechVN · Demo công khai</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <div class="demo-ribbon" role="status">DEMO CÔNG KHAI · DỮ LIỆU HOÀN TOÀN GIẢ ĐỊNH</div>
+    <div class="app-shell">
+      <aside class="sidebar" aria-label="Điều hướng chính">
+        <a class="brand" href="#dashboard" aria-label="HomeTechVN - Tổng quan">
+          <span class="brand-mark" aria-hidden="true">H</span>
+          <span><strong>HomeTechVN</strong><small>Quản trị cửa hàng</small></span>
+        </a>
+        <nav class="nav-list">
+          <button class="nav-item active" data-module="dashboard"><span>⌂</span>Tổng quan</button>
+          <button class="nav-item" data-module="customers"><span>◎</span>Khách hàng</button>
+          <button class="nav-item" data-module="inventory"><span>▦</span>Kho hàng</button>
+          <button class="nav-item" data-module="sales"><span>▤</span>Bán hàng</button>
+          <button class="nav-item" data-module="repairs"><span>⌁</span>Sửa chữa</button>
+          <button class="nav-item" data-module="warranty"><span>◇</span>Bảo hành</button>
+          <button class="nav-item" data-module="reminders"><span>◷</span>Nhắc việc</button>
+          <button class="nav-item" data-module="reports"><span>▥</span>Báo cáo</button>
+        </nav>
+        <div class="sidebar-note">
+          <span class="status-dot"></span>
+          <div><strong>Chế độ chỉ xem</strong><small>Không kết nối dữ liệu thật</small></div>
+        </div>
+      </aside>
+
+      <main class="main-content">
+        <header class="topbar">
+          <div>
+            <p class="eyebrow">Không gian vận hành</p>
+            <h1 id="page-title">Tổng quan cửa hàng</h1>
+            <p id="page-subtitle">Tình hình kinh doanh và công việc cần xử lý hôm nay.</p>
+          </div>
+          <div class="topbar-actions">
+            <label class="search-box">
+              <span aria-hidden="true">⌕</span>
+              <span class="sr-only">Tìm trong bảng hiện tại</span>
+              <input id="table-search" type="search" placeholder="Tìm dữ liệu demo…" />
+            </label>
+            <button class="avatar-button" data-demo-action="Hồ sơ người dùng">AD</button>
+          </div>
+        </header>
+
+        <section class="module-panel active" data-panel="dashboard">
+          <div class="metric-grid">
+            <article class="metric-card cyan"><div><span>Doanh thu hôm nay</span><strong>18.450.000 ₫</strong></div><em>+12,4%</em></article>
+            <article class="metric-card violet"><div><span>Đơn đang sửa</span><strong>14</strong></div><em>5 đơn sắp hẹn</em></article>
+            <article class="metric-card amber"><div><span>Sắp hết bảo hành</span><strong>8</strong></div><em>Trong 30 ngày</em></article>
+            <article class="metric-card emerald"><div><span>Công việc hoàn tất</span><strong>27/32</strong></div><em>84%</em></article>
+          </div>
+
+          <div class="dashboard-grid">
+            <article class="card chart-card">
+              <div class="card-heading"><div><p class="eyebrow">7 ngày gần nhất</p><h2>Doanh thu bán hàng</h2></div><span class="soft-badge">Đơn vị: triệu đồng</span></div>
+              <div class="bars" aria-label="Biểu đồ doanh thu giả định 7 ngày">
+                <div><i style="--h:42%"></i><span>T6</span></div><div><i style="--h:58%"></i><span>T7</span></div><div><i style="--h:38%"></i><span>CN</span></div><div><i style="--h:70%"></i><span>T2</span></div><div><i style="--h:62%"></i><span>T3</span></div><div><i style="--h:85%"></i><span>T4</span></div><div><i style="--h:76%"></i><span>T5</span></div>
+              </div>
+            </article>
+
+            <article class="card task-card">
+              <div class="card-heading"><div><p class="eyebrow">Ưu tiên</p><h2>Cần xử lý</h2></div><button class="text-button" data-module-jump="reminders">Xem tất cả</button></div>
+              <ul class="task-list">
+                <li><span class="task-icon red">!</span><div><strong>2 đơn sửa chữa quá hẹn</strong><small>Cần liên hệ khách hàng</small></div><time>Hôm nay</time></li>
+                <li><span class="task-icon amber">◷</span><div><strong>3 báo giá chờ xác nhận</strong><small>Đã gửi quá 24 giờ</small></div><time>14:30</time></li>
+                <li><span class="task-icon cyan">↓</span><div><strong>5 sản phẩm sắp hết hàng</strong><small>Tồn kho dưới định mức</small></div><time>Kiểm tra</time></li>
+              </ul>
+            </article>
+          </div>
+
+          <article class="card table-card">
+            <div class="card-heading"><div><p class="eyebrow">Hoạt động mới</p><h2>Đơn gần đây</h2></div><button class="primary-button" data-demo-action="Tạo đơn mới">+ Tạo đơn</button></div>
+            <div class="table-wrap">
+              <table><thead><tr><th>Mã đơn</th><th>Khách hàng demo</th><th>Loại</th><th>Giá trị</th><th>Trạng thái</th><th>Cập nhật</th></tr></thead>
+              <tbody class="searchable-body">
+                <tr><td><strong>BH-DEMO-024</strong></td><td>Khách Demo 024</td><td>Bảo hành</td><td>0 ₫</td><td><span class="status waiting">Đang kiểm tra</span></td><td>8 phút trước</td></tr>
+                <tr><td><strong>SC-DEMO-118</strong></td><td>Khách Demo 118</td><td>Sửa laptop</td><td>850.000 ₫</td><td><span class="status progress">Đang sửa</span></td><td>22 phút trước</td></tr>
+                <tr><td><strong>BH-DEMO-023</strong></td><td>Khách Demo 023</td><td>Bán hàng</td><td>12.500.000 ₫</td><td><span class="status done">Hoàn tất</span></td><td>45 phút trước</td></tr>
+                <tr><td><strong>SC-DEMO-117</strong></td><td>Khách Demo 117</td><td>Sửa máy in</td><td>420.000 ₫</td><td><span class="status waiting">Chờ duyệt giá</span></td><td>1 giờ trước</td></tr>
+              </tbody></table>
+            </div>
+          </article>
+        </section>
+
+        <section class="module-panel" data-panel="customers">
+          <div class="metric-grid compact"><article class="metric-card cyan"><div><span>Tổng khách hàng</span><strong>428</strong></div></article><article class="metric-card violet"><div><span>Thiết bị đã lưu</span><strong>612</strong></div></article><article class="metric-card emerald"><div><span>Khách quay lại</span><strong>64%</strong></div></article></div>
+          <article class="card table-card"><div class="card-heading"><div><p class="eyebrow">CRM demo</p><h2>Danh sách khách hàng</h2></div><button class="primary-button" data-demo-action="Thêm khách hàng">+ Thêm khách</button></div><div class="table-wrap"><table><thead><tr><th>Mã</th><th>Khách hàng</th><th>Điện thoại</th><th>Thiết bị</th><th>Lần gần nhất</th></tr></thead><tbody class="searchable-body"><tr><td>KH-DEMO-101</td><td><strong>Khách Demo 101</strong></td><td>09xx 000 101</td><td>Laptop văn phòng</td><td>03/09/2026</td></tr><tr><td>KH-DEMO-102</td><td><strong>Khách Demo 102</strong></td><td>09xx 000 102</td><td>Máy in laser</td><td>02/09/2026</td></tr><tr><td>KH-DEMO-103</td><td><strong>Khách Demo 103</strong></td><td>09xx 000 103</td><td>Camera Wi-Fi</td><td>31/08/2026</td></tr><tr><td>KH-DEMO-104</td><td><strong>Khách Demo 104</strong></td><td>09xx 000 104</td><td>Máy tính để bàn</td><td>29/08/2026</td></tr></tbody></table></div></article>
+        </section>
+
+        <section class="module-panel" data-panel="inventory">
+          <div class="metric-grid compact"><article class="metric-card cyan"><div><span>Mã sản phẩm</span><strong>186</strong></div></article><article class="metric-card amber"><div><span>Sắp hết hàng</span><strong>5</strong></div></article><article class="metric-card violet"><div><span>Giá trị tồn giả định</span><strong>286 triệu</strong></div></article></div>
+          <article class="card table-card"><div class="card-heading"><div><p class="eyebrow">Tồn kho demo</p><h2>Sản phẩm và linh kiện</h2></div><button class="primary-button" data-demo-action="Nhập kho">+ Nhập kho</button></div><div class="table-wrap"><table><thead><tr><th>Mã hàng</th><th>Tên sản phẩm</th><th>Nhóm</th><th>Tồn</th><th>Giá bán</th><th>Cảnh báo</th></tr></thead><tbody class="searchable-body"><tr><td>SP-DEMO-001</td><td><strong>SSD 512GB Demo</strong></td><td>Linh kiện</td><td>12</td><td>1.190.000 ₫</td><td><span class="status done">Ổn định</span></td></tr><tr><td>SP-DEMO-002</td><td><strong>RAM 8GB Demo</strong></td><td>Linh kiện</td><td>3</td><td>690.000 ₫</td><td><span class="status danger">Sắp hết</span></td></tr><tr><td>SP-DEMO-003</td><td><strong>Camera Wi-Fi Demo</strong></td><td>Camera</td><td>8</td><td>890.000 ₫</td><td><span class="status done">Ổn định</span></td></tr><tr><td>SP-DEMO-004</td><td><strong>Mực in Demo 12A</strong></td><td>Máy in</td><td>2</td><td>250.000 ₫</td><td><span class="status danger">Sắp hết</span></td></tr></tbody></table></div></article>
+        </section>
+
+        <section class="module-panel" data-panel="sales">
+          <div class="metric-grid compact"><article class="metric-card emerald"><div><span>Đơn hôm nay</span><strong>9</strong></div></article><article class="metric-card cyan"><div><span>Đã thanh toán</span><strong>15,8 triệu</strong></div></article><article class="metric-card amber"><div><span>Còn phải thu</span><strong>2,65 triệu</strong></div></article></div>
+          <article class="card table-card"><div class="card-heading"><div><p class="eyebrow">Bán hàng demo</p><h2>Đơn bán gần nhất</h2></div><button class="primary-button" data-demo-action="Tạo đơn bán">+ Đơn bán</button></div><div class="table-wrap"><table><thead><tr><th>Mã đơn</th><th>Khách hàng</th><th>Sản phẩm</th><th>Tổng tiền</th><th>Thanh toán</th></tr></thead><tbody class="searchable-body"><tr><td>SO-DEMO-090</td><td>Khách Demo 090</td><td>Laptop Demo Pro</td><td>12.500.000 ₫</td><td><span class="status done">Đủ</span></td></tr><tr><td>SO-DEMO-089</td><td>Khách Demo 089</td><td>SSD 512GB Demo</td><td>1.190.000 ₫</td><td><span class="status waiting">Đặt cọc</span></td></tr><tr><td>SO-DEMO-088</td><td>Khách Demo 088</td><td>Camera Wi-Fi Demo × 2</td><td>1.780.000 ₫</td><td><span class="status done">Đủ</span></td></tr></tbody></table></div></article>
+        </section>
+
+        <section class="module-panel" data-panel="repairs">
+          <div class="metric-grid compact"><article class="metric-card violet"><div><span>Đang tiếp nhận</span><strong>4</strong></div></article><article class="metric-card cyan"><div><span>Đang sửa</span><strong>7</strong></div></article><article class="metric-card amber"><div><span>Chờ khách</span><strong>3</strong></div></article></div>
+          <article class="card table-card"><div class="card-heading"><div><p class="eyebrow">Sửa chữa demo</p><h2>Tiến độ đơn sửa</h2></div><button class="primary-button" data-demo-action="Tiếp nhận sửa chữa">+ Tiếp nhận</button></div><div class="table-wrap"><table><thead><tr><th>Mã sửa</th><th>Thiết bị</th><th>Mô tả lỗi giả định</th><th>Hẹn trả</th><th>Trạng thái</th></tr></thead><tbody class="searchable-body"><tr><td>SC-DEMO-118</td><td>Laptop Demo A</td><td>Không nhận sạc</td><td>05/09/2026</td><td><span class="status progress">Đang sửa</span></td></tr><tr><td>SC-DEMO-117</td><td>Máy in Demo B</td><td>Kẹt giấy</td><td>04/09/2026</td><td><span class="status waiting">Chờ duyệt giá</span></td></tr><tr><td>SC-DEMO-116</td><td>PC Demo C</td><td>Không lên hình</td><td>03/09/2026</td><td><span class="status danger">Quá hẹn</span></td></tr></tbody></table></div></article>
+        </section>
+
+        <section class="module-panel" data-panel="warranty">
+          <div class="metric-grid compact"><article class="metric-card emerald"><div><span>Còn hiệu lực</span><strong>193</strong></div></article><article class="metric-card amber"><div><span>Sắp hết hạn</span><strong>8</strong></div></article><article class="metric-card violet"><div><span>Đang xử lý</span><strong>3</strong></div></article></div>
+          <article class="card table-card"><div class="card-heading"><div><p class="eyebrow">Bảo hành demo</p><h2>Hồ sơ bảo hành</h2></div><button class="primary-button" data-demo-action="Tạo bảo hành">+ Tạo bảo hành</button></div><div class="table-wrap"><table><thead><tr><th>Mã BH</th><th>Sản phẩm</th><th>Khách hàng</th><th>Hết hạn</th><th>Trạng thái</th></tr></thead><tbody class="searchable-body"><tr><td>BH-DEMO-024</td><td>SSD Demo 512GB</td><td>Khách Demo 024</td><td>10/09/2026</td><td><span class="status waiting">Đang kiểm tra</span></td></tr><tr><td>BH-DEMO-023</td><td>Laptop Demo Pro</td><td>Khách Demo 023</td><td>20/08/2027</td><td><span class="status done">Còn hạn</span></td></tr><tr><td>BH-DEMO-022</td><td>Camera Demo C1</td><td>Khách Demo 022</td><td>12/09/2026</td><td><span class="status danger">Sắp hết</span></td></tr></tbody></table></div></article>
+        </section>
+
+        <section class="module-panel" data-panel="reminders">
+          <article class="card table-card"><div class="card-heading"><div><p class="eyebrow">Nhắc việc demo</p><h2>Danh sách cần xử lý</h2></div><button class="primary-button" data-demo-action="Tạo nhắc việc">+ Tạo nhắc việc</button></div><div class="reminder-grid searchable-body"><article class="reminder-item"><span class="task-icon red">!</span><div><strong>Liên hệ đơn SC-DEMO-116</strong><p>Đơn sửa chữa đã quá hẹn 1 ngày.</p><small>Ưu tiên cao · Hôm nay</small></div></article><article class="reminder-item"><span class="task-icon amber">◷</span><div><strong>Gia hạn dịch vụ Demo Office</strong><p>Dịch vụ giả định còn 7 ngày.</p><small>Ưu tiên vừa · 11/09/2026</small></div></article><article class="reminder-item"><span class="task-icon cyan">↓</span><div><strong>Kiểm tra tồn RAM Demo 8GB</strong><p>Tồn kho dưới định mức 5 sản phẩm.</p><small>Kho hàng · Hôm nay</small></div></article></div></article>
+        </section>
+
+        <section class="module-panel" data-panel="reports">
+          <div class="report-grid"><article class="card report-card"><p class="eyebrow">Doanh thu giả định</p><strong>326,4 triệu ₫</strong><span>Tháng 09/2026</span><div class="progress"><i style="width:72%"></i></div></article><article class="card report-card"><p class="eyebrow">Lợi nhuận ước tính</p><strong>64,8 triệu ₫</strong><span>Biên lợi nhuận 19,9%</span><div class="progress violet"><i style="width:49%"></i></div></article><article class="card report-card"><p class="eyebrow">Hiệu suất sửa chữa</p><strong>91,2%</strong><span>Đúng hẹn trong tháng</span><div class="progress emerald"><i style="width:91%"></i></div></article></div>
+          <article class="card table-card"><div class="card-heading"><div><p class="eyebrow">Cơ cấu demo</p><h2>Hiệu quả theo nhóm</h2></div><button class="primary-button" data-demo-action="Xuất báo cáo">Xuất báo cáo</button></div><div class="table-wrap"><table><thead><tr><th>Nhóm</th><th>Doanh thu</th><th>Chi phí</th><th>Lợi nhuận</th><th>Tỷ trọng</th></tr></thead><tbody class="searchable-body"><tr><td>Bán laptop demo</td><td>156,2 triệu ₫</td><td>132,4 triệu ₫</td><td>23,8 triệu ₫</td><td>47,9%</td></tr><tr><td>Sửa chữa demo</td><td>74,6 triệu ₫</td><td>25,8 triệu ₫</td><td>48,8 triệu ₫</td><td>22,8%</td></tr><tr><td>Linh kiện demo</td><td>58,1 triệu ₫</td><td>46,7 triệu ₫</td><td>11,4 triệu ₫</td><td>17,8%</td></tr></tbody></table></div></article>
+        </section>
+
+        <footer>HomeTechVN Public Demo · Không thu thập, lưu trữ hoặc gửi dữ liệu · Mọi tên, số liệu và mã đơn trên trang đều là giả định.</footer>
+      </main>
+    </div>
+
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <script src="./app.js" defer></script>
+  </body>
+</html>
