@@ -1,13 +1,15 @@
 # HomeTechVN Public Demo
 
-Bản demo công khai, chỉ xem, mô phỏng giao diện quản lý cửa hàng HomeTechVN.
+Bản sandbox tương tác mô phỏng giao diện quản lý cửa hàng HomeTechVN.
 
 ## Phạm vi
 
 - Tổng quan, khách hàng, kho hàng, bán hàng, sửa chữa, bảo hành, nhắc việc và báo cáo.
 - Mọi tên, số điện thoại, mã đơn và số liệu đều là dữ liệu giả định.
-- Không kết nối Supabase, không có tài khoản đăng nhập và không lưu dữ liệu.
-- Các thao tác tạo/sửa/xóa chỉ hiển thị thông báo demo.
+- Có thể chuyển giữa vai trò Quản trị viên, Quản lý, Bán hàng và Kỹ thuật viên.
+- Có thể nhập thử khách hàng, kho, đơn bán, sửa chữa, bảo hành và nhắc việc.
+- Bản ghi thử chỉ lưu trong `localStorage` của trình duyệt và có thể khôi phục bằng một nút.
+- Không kết nối Supabase, không có tài khoản đăng nhập và không gửi dữ liệu lên máy chủ.
 
 ## Chạy cục bộ
 
