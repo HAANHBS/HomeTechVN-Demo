@@ -80,10 +80,16 @@ requireTokens('supabase/tests/t19_verify.sql',['T19 QR DATABASE SECURITY CHECK: 
 requireTokens('scripts/t19-runtime-verify.mjs',[
   'maxChildBuffer=64*1024*1024','CHILD OUTPUT (last 160 lines)','T19_FAILURE_${stamp}.txt',
   '[REDACTED_JWT]','[REDACTED_SUPABASE_KEY]','Failure snapshot:',
+  'safeOutput(stdout)','safeOutput(stderr)','T19_LOCAL_VERIFY_${stamp}.txt','Secrets included: NO',
   'T19 CHILD PROCESS DIAGNOSTICS SELF TEST: PASS','process.exit(7)',
 ])
+requireTokens('scripts/t17-demo-load.mjs',[
+  'redactConsole(stdout)','redactConsole(stderr)','[REDACTED_SUPABASE_KEY]','console redaction self-test failed',
+])
 requireTokens('docs/T19_UNIVERSAL_QR_OPERATIONS.md',['T19 LOCAL REPRODUCIBILITY: PASS','does not claim that a bank transfer succeeded','Raw tokens are never stored'])
-requireTokens('docs/T19_STATUS.md',['CANDIDATE','Locked migrations #1–#36: unchanged','no real bank/provider acknowledgement'])
+requireTokens('docs/T19_STATUS.md',['COMPLETE & LOCKED','Locked migrations #1–#37','no real bank/provider acknowledgement'])
+requireTokens('docs/T19_FINAL_ACCEPTANCE.md',['T19 LOCAL REPRODUCIBILITY: PASS','T19 CLEAN BASELINE AFTER VERIFY: PASS','Secrets included in final evidence: NO'])
+requireTokens('docs/T19_FINAL_INTEGRITY.txt',['Migration count: 37','Next migration: #38','T19 migration SHA-256:'])
 
 if(!failed){
   console.log('T19 UNIVERSAL QR SECURITY CONTRACT: PASS')
