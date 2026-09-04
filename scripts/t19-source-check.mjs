@@ -34,7 +34,9 @@ for(const name of ['t19:source-check','t19:verify'])if(!rootPackage.scripts?.[na
 const migration='supabase/migrations/20260904014416_t19_universal_qr_operations.sql'
 requireTokens(migration,[
   'create table private.qr_codes','token_hash bytea not null unique','create table private.qr_action_events',
-  'alter table private.qr_codes enable row level security','revoke all on table private.qr_codes,private.qr_action_events from public,anon,authenticated',
+  'alter table private.qr_codes enable row level security','create policy qr_codes_no_direct_access',
+  'create policy qr_action_events_no_direct_access','to public\nusing (false)\nwith check (false)',
+  'revoke all on table private.qr_codes,private.qr_action_events from public,anon,authenticated',
   "extensions.digest(v_token,'sha256')",'private.fn_assert_active_or_privileged()',"private.has_permission('qr.issue')",
   "private.has_permission('qr.revoke')",'create or replace function public.qr_issue','create or replace function public.qr_resolve',
   'create or replace function public.qr_revoke','security definer set search_path=\'\'',
@@ -46,6 +48,10 @@ const sql=read(migration)
 if(/create table private\.qr_codes[\s\S]*?\btoken\s+text\b/i.test(sql))fail('QR table must not persist a plaintext token')
 if(/grant execute on function private\.qr_(?:issue|resolve|revoke)_impl[^;]+to authenticated/i.test(sql))fail('private QR implementation must not be executable by authenticated')
 if(/grant (?:select|all)[^;]+private\.qr_codes[^;]+authenticated/i.test(sql))fail('authenticated must not read private QR table')
+for(const [table,policy] of [['qr_codes','qr_codes_no_direct_access'],['qr_action_events','qr_action_events_no_direct_access']]){
+  const pattern=new RegExp(`create policy\\s+${policy}\\s+on\\s+private\\.${table}\\s+for all\\s+to public\\s+using \\(false\\)\\s+with check \\(false\\)`,'i')
+  if(!pattern.test(sql))fail(`${table} must have an explicit deny-all RLS policy`)
+}
 
 requireTokens('app/src/features/qr/QrCommandCenter.tsx',[
   "supabase.rpc('qr_resolve'","supabase.rpc('qr_issue'","supabase.rpc('qr_revoke'",'BarcodeDetector',
@@ -70,7 +76,7 @@ for(const relative of ['app/src/App.tsx','app/src/features/qr/QrCommandCenter.ts
   if(/service[_-]?role|sb_secret_/i.test(text))fail(`T19 browser source contains server-secret marker: ${relative}`)
 }
 
-requireTokens('supabase/tests/t19_verify.sql',['T19 QR DATABASE SECURITY CHECK: PASS','authenticated must not read private QR tokens','anon must not resolve internal QR'])
+requireTokens('supabase/tests/t19_verify.sql',['T19 QR DATABASE SECURITY CHECK: PASS','authenticated must not read private QR tokens','anon must not resolve internal QR','T19 security snapshot RLS gap'])
 requireTokens('scripts/t19-runtime-verify.mjs',[
   'maxChildBuffer=64*1024*1024','CHILD OUTPUT (last 160 lines)','T19_FAILURE_${stamp}.txt',
   '[REDACTED_JWT]','[REDACTED_SUPABASE_KEY]','Failure snapshot:',
