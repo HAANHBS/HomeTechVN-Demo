@@ -1,6 +1,6 @@
 # T19 — Universal QR Operations
 
-Status: **CANDIDATE — requires Windows/local Supabase verification**
+Status: **COMPLETE & LOCKED — Windows/local Supabase verification passed 2026-09-04**
 
 T19 adds one internal QR control plane across the T0–T18 system. It does not modify any of the 36 locked migrations. Migration #37 stores only a SHA-256 token hash, while the QR image carries a random 256-bit token.
 
@@ -43,4 +43,4 @@ T19 WORKER CHECK: PASS
 T19 CLEAN BASELINE AFTER VERIFY: PASS
 ```
 
-T19 is not COMPLETE until all markers pass on Windows against local Supabase.
+All acceptance markers passed on Windows against local Supabase. Migration #37 is locked; the next database migration is #38.
