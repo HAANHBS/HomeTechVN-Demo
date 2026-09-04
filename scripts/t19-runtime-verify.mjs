@@ -29,6 +29,7 @@ function redact(value){
     .replace(/(sb_(?:publishable|secret)_[a-zA-Z0-9_-]+)/g,'[REDACTED_SUPABASE_KEY]')
     .replace(/(HomeTechVN#Demo2026!)/g,'[REDACTED_DEMO_PASSWORD]')
 }
+function safeOutput(value){return redact(String(value||''))}
 function run(command,args,{inherit=true,input}={}){
   const common={cwd:root,windowsHide:true,shell:false,encoding:'utf8',input,maxBuffer:maxChildBuffer}
   let result
@@ -39,8 +40,8 @@ function run(command,args,{inherit=true,input}={}){
   const stdout=String(result.stdout||'')
   const stderr=String(result.stderr||'')
   appendChildOutput(stdout);appendChildOutput(stderr)
-  if(inherit&&stdout)process.stdout.write(stdout)
-  if(inherit&&stderr)process.stderr.write(stderr)
+  if(inherit&&stdout)process.stdout.write(safeOutput(stdout))
+  if(inherit&&stderr)process.stderr.write(safeOutput(stderr))
   if(result.error)throw result.error
   if(result.status!==0){
     const detail=tailLines(`${stdout}\n${stderr}`)
@@ -136,6 +137,27 @@ function writeFailureSnapshot(primary,cleanup){
   fs.writeFileSync(file,redact(report),'utf8')
   return file
 }
+function writeSuccessSnapshot(){
+  const dir=path.join(root,'docs','snapshots');fs.mkdirSync(dir,{recursive:true})
+  const d=new Date(),stamp=d.toISOString().replace(/[-:]/g,'').replace('T','_').slice(0,15)
+  const file=path.join(dir,`T19_LOCAL_VERIFY_${stamp}.txt`)
+  const report=[
+    'HomeTechVN T19 FINAL Windows acceptance',
+    `Created: ${d.toISOString()}`,
+    'T19 LOCAL REPRODUCIBILITY: PASS',
+    'T19 LOCKED MIGRATION REGRESSION: PASS',
+    'T19 QR DATABASE SECURITY CHECK: PASS',
+    'T19 QR AUTH/RBAC INTEGRATION: PASS',
+    'T19 QR RESPONSIVE UI CHECK: PASS',
+    'T19 APP BUILD: PASS',
+    'T19 WORKER CHECK: PASS',
+    'T19 CLEAN BASELINE AFTER VERIFY: PASS',
+    'Secrets included: NO',
+    '',
+  ].join('\n')
+  fs.writeFileSync(file,safeOutput(report),'utf8')
+  return file
+}
 function diagnosticSelfTest(){
   let failure=null
   try{
@@ -144,8 +166,9 @@ function diagnosticSelfTest(){
   const message=failure instanceof Error?failure.message:String(failure||'')
   if(!message.includes('Command failed (7)')||!message.includes('T19_STDOUT_MARKER')||!message.includes('T19_STDERR_MARKER'))throw new Error('T19 child-process diagnostics self-test failed')
   const fakeJwt=`eyJ${'a'.repeat(24)}.${'b'.repeat(24)}.${'c'.repeat(12)}`
-  const sanitized=redact(`${fakeJwt} sb_publishable_${'x'.repeat(24)} ${demoPassword}`)
+  const sanitized=safeOutput(`${fakeJwt} sb_publishable_${'x'.repeat(24)} sb_secret_${'y'.repeat(24)} ${demoPassword}`)
   if(sanitized.includes(fakeJwt)||sanitized.includes('sb_publishable_')||sanitized.includes(demoPassword))throw new Error('T19 diagnostic redaction self-test failed')
+  if(sanitized.includes('sb_secret_'))throw new Error('T19 success-output redaction self-test failed')
   console.log('T19 CHILD PROCESS DIAGNOSTICS SELF TEST: PASS')
 }
 
@@ -186,5 +209,6 @@ async function main(){
     process.exit(1)
   }
   console.log('T19 QR RESPONSIVE UI CHECK: PASS')
+  console.log(`Snapshot: ${writeSuccessSnapshot()}`)
 }
 main()
