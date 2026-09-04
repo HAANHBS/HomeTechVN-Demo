@@ -15,8 +15,25 @@ begin
   if v_count<>2 then raise exception 'T19 QR private RLS missing'; end if;
 
   select count(*) into v_count from pg_policies
-  where schemaname='private' and tablename in ('qr_codes','qr_action_events');
-  if v_count<>0 then raise exception 'T19 private QR tables must have no client policies'; end if;
+  where schemaname='private'
+    and (
+      (tablename='qr_codes' and policyname='qr_codes_no_direct_access') or
+      (tablename='qr_action_events' and policyname='qr_action_events_no_direct_access')
+    )
+    and cmd='ALL'
+    and roles='{public}'
+    and qual='false'
+    and with_check='false';
+  if v_count<>2 then raise exception 'T19 private QR deny-all policies missing or unsafe'; end if;
+
+  select count(*) into v_count
+  from pg_class c
+  join pg_namespace n on n.oid=c.relnamespace
+  where c.relkind in ('r','p')
+    and c.relrowsecurity
+    and n.nspname in ('public','private','public_lookup_private')
+    and not exists(select 1 from pg_policy p where p.polrelid=c.oid);
+  if v_count<>0 then raise exception 'T19 security snapshot RLS gap: % table(s) without policy',v_count; end if;
 
   if has_table_privilege('authenticated','private.qr_codes','SELECT') then
     raise exception 'authenticated must not read private QR tokens';
