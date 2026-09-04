@@ -9,6 +9,7 @@ const docker=isWin?'docker.exe':'docker'
 const npx=isWin?'npx.cmd':'npx'
 const t17ExcludedServices='realtime,storage-api,imgproxy,mailpit,postgres-meta,studio,edge-runtime,logflare,vector,supavisor'
 const demoPassword='HomeTechVN#Demo2026!'
+const maxChildBuffer=64*1024*1024
 const demoUsers=[
   {email:'demo.admin@hometechvn.example',fullName:'Demo Admin',role:'admin'},
   {email:'demo.manager@hometechvn.example',fullName:'Demo Manager',role:'manager'},
@@ -22,22 +23,32 @@ function cmdQuote(value){
   if(!/[\s"&|<>^]/.test(s))return s
   return `"${s.replace(/"/g,'\\"')}"`
 }
+function redactConsole(value){
+  return String(value||'')
+    .replace(/(eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{10,})/g,'[REDACTED_JWT]')
+    .replace(/(sb_(?:publishable|secret)_[a-zA-Z0-9_-]+)/g,'[REDACTED_SUPABASE_KEY]')
+    .replace(/(HomeTechVN#Demo2026!)/g,'[REDACTED_DEMO_PASSWORD]')
+}
 function run(cmd,args,{inherit=false,input=null}={}){
-  const common={cwd:root,windowsHide:true,shell:false}
+  const common={cwd:root,windowsHide:true,shell:false,encoding:'utf8',input,maxBuffer:maxChildBuffer}
   let r
   if(isWin && /\.cmd$/i.test(cmd)){
     const comspec=process.env.ComSpec||'cmd.exe'
     const line=[cmd,...args].map(cmdQuote).join(' ')
-    r=spawnSync(comspec,['/d','/s','/c',line],inherit?{...common,stdio:'inherit'}:{...common,encoding:'utf8',input})
+    r=spawnSync(comspec,['/d','/s','/c',line],common)
   }else{
-    r=spawnSync(cmd,args,inherit?{...common,stdio:'inherit'}:{...common,encoding:'utf8',input})
+    r=spawnSync(cmd,args,common)
   }
+  const stdout=String(r.stdout||'')
+  const stderr=String(r.stderr||'')
+  if(inherit&&stdout)process.stdout.write(redactConsole(stdout))
+  if(inherit&&stderr)process.stderr.write(redactConsole(stderr))
   if(r.error)throw r.error
   if(r.status!==0){
-    const detail=[r.stdout,r.stderr].filter(Boolean).join('\n').trim()
+    const detail=redactConsole([stdout,stderr].filter(Boolean).join('\n').trim())
     throw new Error(`Command failed (${r.status}): ${cmd} ${args.join(' ')}${detail?`\n${detail}`:''}`)
   }
-  return {stdout:r.stdout||'',stderr:r.stderr||''}
+  return {stdout,stderr}
 }
 function runNpxSupabase(args,{inherit=false}={}){
   return run(npx,['supabase',...args],{inherit})
@@ -53,6 +64,8 @@ function selfTest(){
   try{assertLocalUrl('https://example.supabase.co')}catch{blocked=true}
   if(!blocked)throw new Error('hosted URL safety self-test failed')
   if(dotenvQuote('abc#123')!=='"abc#123"')throw new Error('dotenv quote self-test failed')
+  const sanitized=redactConsole(`sb_secret_${'x'.repeat(24)} ${demoPassword}`)
+  if(sanitized.includes('sb_secret_')||sanitized.includes(demoPassword))throw new Error('console redaction self-test failed')
   console.log('T17 NODE DEMO LOADER SELF TEST: PASS')
 }
 function resolveLocalConfig(){
