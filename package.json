@@ -1,7 +1,7 @@
 {
   "name": "hometechvn",
   "private": true,
-  "version": "0.19.0-t19.0",
+  "version": "0.20.0-t20.0",
   "scripts": {
     "sb:version": "supabase --version",
     "sb:start": "supabase start",
@@ -60,7 +60,11 @@
     "t18:package": "powershell.exe -NoProfile -ExecutionPolicy Bypass -File \".\\scripts\\t18-package.ps1\"",
     "t18:verify": "node ./scripts/t18-verify.mjs",
     "t19:source-check": "node ./scripts/t19-source-check.mjs",
-    "t19:verify": "node ./scripts/t19-runtime-verify.mjs"
+    "t19:verify": "node ./scripts/t19-runtime-verify.mjs",
+    "t20:configure": "node ./scripts/t20-configure.mjs",
+    "t20:hosted-check": "node ./scripts/t20-hosted-readiness.mjs",
+    "t20:source-check": "node ./scripts/t20-source-check.mjs",
+    "t20:verify": "node ./scripts/t20-runtime-verify.mjs"
   },
   "devDependencies": {
     "supabase": "2.116.0"

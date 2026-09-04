@@ -13,6 +13,7 @@ interface ImportMetaEnv {
   readonly VITE_HOMETECHVN_DEMO_MODE?: 'true' | 'false'
   readonly VITE_HOMETECHVN_DEMO_ACCOUNTS?: string
   readonly VITE_HOMETECHVN_DEMO_PASSWORD?: string
+  readonly VITE_HOMETECHVN_HOSTED_DEMO?: 'true' | 'false'
 }
 
 interface ImportMeta {

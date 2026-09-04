@@ -1,0 +1,41 @@
+HomeTechVN T20 HOSTED CANDIDATE integrity manifest
+Candidate date: 2026-09-04
+Migration count: 38
+Locked migrations: #1-#37
+Candidate migration: #38
+Next migration after acceptance: #39
+
+T19 FINAL manifest SHA-256:
+c63b1359cdca38ea3038d1d6564d40bc0b405998904c96e420c09d16341a08fd  docs/T19_FINAL_INTEGRITY.txt
+
+T20 database and hosted-data SHA-256:
+36ee28782e869769e05e8fe3ed2240184e724885f18d718e53d234cc4b21c721  supabase/migrations/20260904154351_t20_private_cost_rls_hardening.sql
+47a687d9e5da4550adf6a447a5fa87fa90d6978ae9e34fda1001a306af8157c3  supabase/t20_hosted_demo_data.sql
+6c13ab1729485bdd60daa37ea867a302ffe9c9599e6bd5a0b5e3dc179b7bc3a6  supabase/tests/t20_verify.sql
+
+T20 verifier and configuration SHA-256:
+bb5d28091e3b2f49eaaa8632a63c2fc8ed83a9ea008e1e95f584183fe3d6d548  scripts/t20-configure.mjs
+212b3b185da5b522e75d7b132a62598bf635aad932fdfe26854dbcc2e7570c98  scripts/t20-hosted-readiness.mjs
+5ea58916b683db53952bb0e03678bd353514f2e0ae5fea89e85b976fbc350105  scripts/t20-runtime-verify.mjs
+09d224d2836b4a5e57b7eb7be2d0d34d9b6525066608d9dfbef712f84baae02f  scripts/t20-source-check.mjs
+
+T20 hosted UI SHA-256:
+94886a62da5d51cec59102a47cad95291266a262d28e28a2260cb0892abfc6e5  app/index.html
+5ac174290c9818058c7629f815dd4a10d9352f871ed9199bd4071c9bf7e59034  app/src/features/auth/LoginPage.tsx
+a14c7b39eb54f82e2b7a03eb0f4857b897911438efa1d0221907ab1358be8696  app/src/features/demo/DemoModeBanner.tsx
+c76a272036fc1cc46bbc6a4b5a21ad13de4a8ad372a36598910076d54a191a2c  app/src/vite-env.d.ts
+
+Dependency locks SHA-256:
+0d541ef42b84a4453959627a5cf6d803e1d42bb41a9b086a43503fbf20429007  package-lock.json
+69e28b69246253c3e22bab194c13fa3da4ce62b9a84cd8a80c8fe31c68c675a7  app/package-lock.json
+2a440df79c6ca7694bc14d8d1c2035c0bd8ccd19b239c2846f42a2551903215b  worker/package-lock.json
+
+Hosted deployment evidence:
+Site version: 3
+Site access: owner-only
+Supabase hosted project: puqvbenyenwemfbsqpfd
+Hosted data marker: demo.t20.hosted
+Contains real customer data: false
+
+Acceptance state:
+HOSTED CANDIDATE — Windows t20:verify snapshot still required before COMPLETE & LOCKED.
