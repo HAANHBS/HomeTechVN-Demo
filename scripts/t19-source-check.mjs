@@ -71,6 +71,11 @@ for(const relative of ['app/src/App.tsx','app/src/features/qr/QrCommandCenter.ts
 }
 
 requireTokens('supabase/tests/t19_verify.sql',['T19 QR DATABASE SECURITY CHECK: PASS','authenticated must not read private QR tokens','anon must not resolve internal QR'])
+requireTokens('scripts/t19-runtime-verify.mjs',[
+  'maxChildBuffer=64*1024*1024','CHILD OUTPUT (last 160 lines)','T19_FAILURE_${stamp}.txt',
+  '[REDACTED_JWT]','[REDACTED_SUPABASE_KEY]','Failure snapshot:',
+  'T19 CHILD PROCESS DIAGNOSTICS SELF TEST: PASS','process.exit(7)',
+])
 requireTokens('docs/T19_UNIVERSAL_QR_OPERATIONS.md',['T19 LOCAL REPRODUCIBILITY: PASS','does not claim that a bank transfer succeeded','Raw tokens are never stored'])
 requireTokens('docs/T19_STATUS.md',['CANDIDATE','Locked migrations #1–#36: unchanged','no real bank/provider acknowledgement'])
 
