@@ -28,6 +28,7 @@ function readDemoAccounts(): DemoAccount[] {
 
 export function LoginPage() {
   const demoMode = import.meta.env.VITE_HOMETECHVN_DEMO_MODE === 'true'
+  const hostedDemo = import.meta.env.VITE_HOMETECHVN_HOSTED_DEMO === 'true'
   const demoAccounts = demoMode ? readDemoAccounts() : []
   const demoPassword = demoMode ? import.meta.env.VITE_HOMETECHVN_DEMO_PASSWORD?.trim() ?? '' : ''
   const [email, setEmail] = useState('')
@@ -62,7 +63,7 @@ export function LoginPage() {
           </p>
           <h1 className="mt-3 text-3xl font-bold">Đăng nhập hệ thống</h1>
           <p className="mt-2 text-sm text-slate-400">
-            T17 — Demo tích hợp toàn hệ thống
+            {hostedDemo ? 'T20 — Hosted Demo, chỉ dùng dữ liệu giả định' : 'HomeTechVN — Vận hành toàn hệ thống'}
           </p>
         </div>
 
