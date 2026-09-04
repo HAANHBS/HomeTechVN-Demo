@@ -47,7 +47,9 @@ function sqlFile(container,relative,marker){
   if(!output.includes(marker))throw new Error(`SQL marker missing: ${marker}`)
 }
 async function http(url,{method='GET',key,token,body,allowFailure=false}={}){
-  const response=await fetch(url,{method,headers:{apikey:key,Authorization:`Bearer ${token||key}`,'Content-Type':'application/json'},body:body===undefined?undefined:JSON.stringify(body)})
+  const headers={apikey:key,'Content-Type':'application/json'}
+  if(token)headers.Authorization=`Bearer ${token}`
+  const response=await fetch(url,{method,headers,body:body===undefined?undefined:JSON.stringify(body)})
   const text=await response.text();let data=text
   try{data=text?JSON.parse(text):null}catch{/* keep text */}
   if(!response.ok&&!allowFailure)throw new Error(`HTTP ${response.status} ${new URL(url).pathname}: ${typeof data==='string'?data:JSON.stringify(data)}`)
