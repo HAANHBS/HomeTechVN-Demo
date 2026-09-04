@@ -23,7 +23,7 @@ The QR intent caps available actions. A `VIEW` QR never becomes an edit QR. Curr
 ## Safety rules
 
 - Internal QR requires a signed-in, active profile; it never bypasses Auth or RLS.
-- Private QR tables expose no client policies and no table grants to `anon` or `authenticated`.
+- Private QR tables have explicit deny-all RLS policies and no table grants to `anon` or `authenticated`.
 - Browser clients can execute only the three public wrappers: `qr_issue`, `qr_resolve`, and `qr_revoke`.
 - Raw tokens are never stored in PostgreSQL; only `digest(token, 'sha256')` is stored.
 - Do not encode passwords, service-role keys, license secrets, card data, or personal data in QR images.
