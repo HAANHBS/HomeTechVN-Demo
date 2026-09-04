@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "hometechvn-notification-worker",
+  "main": "src/index.js",
+  "compatibility_date": "2026-08-30",
+  "observability": {
+    "enabled": true
+  },
+  "triggers": {
+    "crons": ["*/5 * * * *"]
+  },
+  "vars": {
+    "WORKER_CRON_ENABLED": "false",
+    "NOTIFICATION_BATCH_SIZE": "20",
+    "DRY_RUN": "true",
+    "ZALO_AUTH_HEADER": "access_token",
+    "ZALO_AUTH_SCHEME": ""
+  }
+}

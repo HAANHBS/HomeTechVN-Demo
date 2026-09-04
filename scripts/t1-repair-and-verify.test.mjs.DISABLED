@@ -1,0 +1,62 @@
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import assert from 'node:assert/strict'
+import { repairMigrations, expectedMigrations, legacyMigrations } from './t1-repair-and-verify.mjs'
+
+function createFixture({ legacy = false, unexpected = false } = {}) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'hometechvn-t1-'))
+  const migrations = path.join(root, 'supabase', 'migrations')
+  fs.mkdirSync(migrations, { recursive: true })
+  fs.mkdirSync(path.join(root, 'docs'), { recursive: true })
+
+  for (const name of expectedMigrations) {
+    fs.writeFileSync(path.join(migrations, name), '-- test\n')
+  }
+
+  if (legacy) {
+    fs.writeFileSync(path.join(migrations, legacyMigrations[0]), '-- legacy\n')
+  }
+
+  if (unexpected) {
+    fs.writeFileSync(path.join(migrations, '20990101000000_unexpected.sql'), '-- unexpected\n')
+  }
+
+  return root
+}
+
+// Test 1: clean package remains clean.
+{
+  const root = createFixture()
+  const result = repairMigrations(root)
+  assert.deepEqual(result.sqlFiles, expectedMigrations)
+  assert.equal(result.moved.length, 0)
+  fs.rmSync(root, { recursive: true, force: true })
+}
+
+// Test 2: known legacy migration is moved away automatically.
+{
+  const root = createFixture({ legacy: true })
+  const result = repairMigrations(root)
+  assert.deepEqual(result.sqlFiles, expectedMigrations)
+  assert.equal(result.moved.length, 1)
+  assert.equal(fs.existsSync(path.join(root, 'supabase', 'migrations', legacyMigrations[0])), false)
+  assert.equal(fs.existsSync(result.moved[0].target), true)
+  fs.rmSync(root, { recursive: true, force: true })
+}
+
+// Test 3: unknown migration causes a safe stop instead of deleting it.
+{
+  const root = createFixture({ unexpected: true })
+  assert.throws(
+    () => repairMigrations(root),
+    /migration SQL ngoài bộ T1 v1\.7/
+  )
+  assert.equal(
+    fs.existsSync(path.join(root, 'supabase', 'migrations', '20990101000000_unexpected.sql')),
+    true
+  )
+  fs.rmSync(root, { recursive: true, force: true })
+}
+
+console.log('PASS: t1-repair-and-verify migration cleanup unit tests')
