@@ -71,6 +71,24 @@ where actor_user_id is not null;
 
 alter table private.qr_codes enable row level security;
 alter table private.qr_action_events enable row level security;
+
+-- These tables are reachable only through the SECURITY DEFINER QR API.  Keep an
+-- explicit deny-all policy on each table so the security posture snapshot can
+-- distinguish an intentionally closed table from an unfinished RLS setup.
+create policy qr_codes_no_direct_access
+on private.qr_codes
+for all
+to public
+using (false)
+with check (false);
+
+create policy qr_action_events_no_direct_access
+on private.qr_action_events
+for all
+to public
+using (false)
+with check (false);
+
 revoke all on table private.qr_codes,private.qr_action_events from public,anon,authenticated;
 grant all on table private.qr_codes,private.qr_action_events to service_role;
 grant usage,select on sequence private.qr_action_events_id_seq to service_role;
