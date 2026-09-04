@@ -12,18 +12,41 @@ const envPath=path.join(root,'app','.env.local')
 const hadEnv=fs.existsSync(envPath)
 const savedEnv=hadEnv?fs.readFileSync(envPath):null
 let primaryError=null
+const childLog=[]
+const maxChildBuffer=64*1024*1024
 
 function quote(value){const s=String(value);return /[\s"&|<>^]/.test(s)?`"${s.replace(/"/g,'\\"')}"`:s}
+function appendChildOutput(value){
+  const text=String(value||'')
+  if(text)childLog.push(text)
+}
+function tailLines(value,count=160){
+  return String(value||'').split(/\r?\n/).slice(-count).join('\n').trim()
+}
+function redact(value){
+  return String(value||'')
+    .replace(/(eyJ[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{20,}\.[a-zA-Z0-9_-]{10,})/g,'[REDACTED_JWT]')
+    .replace(/(sb_(?:publishable|secret)_[a-zA-Z0-9_-]+)/g,'[REDACTED_SUPABASE_KEY]')
+    .replace(/(HomeTechVN#Demo2026!)/g,'[REDACTED_DEMO_PASSWORD]')
+}
 function run(command,args,{inherit=true,input}={}){
-  const common={cwd:root,windowsHide:true,shell:false}
+  const common={cwd:root,windowsHide:true,shell:false,encoding:'utf8',input,maxBuffer:maxChildBuffer}
   let result
   if(isWin&&/\.cmd$/i.test(command)){
     const line=[command,...args].map(quote).join(' ')
-    result=spawnSync(process.env.ComSpec||'cmd.exe',['/d','/s','/c',line],inherit?{...common,stdio:'inherit'}:{...common,encoding:'utf8',input})
-  }else result=spawnSync(command,args,inherit?{...common,stdio:'inherit'}:{...common,encoding:'utf8',input})
+    result=spawnSync(process.env.ComSpec||'cmd.exe',['/d','/s','/c',line],common)
+  }else result=spawnSync(command,args,common)
+  const stdout=String(result.stdout||'')
+  const stderr=String(result.stderr||'')
+  appendChildOutput(stdout);appendChildOutput(stderr)
+  if(inherit&&stdout)process.stdout.write(stdout)
+  if(inherit&&stderr)process.stderr.write(stderr)
   if(result.error)throw result.error
-  if(result.status!==0)throw new Error(`Command failed (${result.status}): ${command} ${args.join(' ')}`)
-  return result.stdout||''
+  if(result.status!==0){
+    const detail=tailLines(`${stdout}\n${stderr}`)
+    throw new Error(`Command failed (${result.status}): ${command} ${args.join(' ')}${detail?`\n--- CHILD OUTPUT (last 160 lines) ---\n${detail}`:''}`)
+  }
+  return stdout
 }
 function runSupabase(args,options){return run(npx,['supabase',...args],options)}
 function localConfig(){
@@ -91,10 +114,45 @@ function assertClean(local){
   const counts=JSON.parse(output.split(/\r?\n/).findLast(x=>x.trim().startsWith('{')))
   for(const key of ['users','profiles','customers','sales','repairs','warranties','qr_codes','qr_events','custom_rules'])if(Number(counts[key])!==0)throw new Error(`Dirty baseline: ${key}=${counts[key]}`)
   if(Number(counts.rules)!==12||Number(counts.system_rules)!==12)throw new Error(`Foundation reminder rules changed: ${counts.rules}/${counts.system_rules}`)
+} 
+function writeFailureSnapshot(primary,cleanup){
+  const dir=path.join(root,'docs','snapshots');fs.mkdirSync(dir,{recursive:true})
+  const d=new Date(),stamp=d.toISOString().replace(/[-:]/g,'').replace('T','_').slice(0,15)
+  const file=path.join(dir,`T19_FAILURE_${stamp}.txt`)
+  const report=[
+    'T19 FAILURE SNAPSHOT',
+    `Created: ${d.toISOString()}`,
+    '',
+    '[PRIMARY ERROR]',
+    primary instanceof Error?primary.message:String(primary||'(none)'),
+    '',
+    '[CLEANUP ERROR]',
+    cleanup instanceof Error?cleanup.message:String(cleanup||'(none)'),
+    '',
+    '[CHILD LOG TAIL]',
+    tailLines(childLog.join('\n'),240),
+    '',
+  ].join('\n')
+  fs.writeFileSync(file,redact(report),'utf8')
+  return file
+}
+function diagnosticSelfTest(){
+  let failure=null
+  try{
+    run(process.execPath,['-e',"process.stdout.write('T19_STDOUT_MARKER\\n');process.stderr.write('T19_STDERR_MARKER\\n');process.exit(7)"],{inherit:false})
+  }catch(error){failure=error}
+  const message=failure instanceof Error?failure.message:String(failure||'')
+  if(!message.includes('Command failed (7)')||!message.includes('T19_STDOUT_MARKER')||!message.includes('T19_STDERR_MARKER'))throw new Error('T19 child-process diagnostics self-test failed')
+  const fakeJwt=`eyJ${'a'.repeat(24)}.${'b'.repeat(24)}.${'c'.repeat(12)}`
+  const sanitized=redact(`${fakeJwt} sb_publishable_${'x'.repeat(24)} ${demoPassword}`)
+  if(sanitized.includes(fakeJwt)||sanitized.includes('sb_publishable_')||sanitized.includes(demoPassword))throw new Error('T19 diagnostic redaction self-test failed')
+  console.log('T19 CHILD PROCESS DIAGNOSTICS SELF TEST: PASS')
 }
 
 async function main(){
+  if(process.argv.includes('--diagnostic-self-test')){diagnosticSelfTest();return}
   try{
+    diagnosticSelfTest()
     run(process.execPath,[path.join('scripts','t18-powershell-static-check.mjs')])
     run(process.execPath,[path.join('scripts','t17-resolve-local-config.mjs'),'--self-test'])
     run(process.execPath,[path.join('scripts','t17-demo-load.mjs'),'--self-test'])
@@ -124,6 +182,7 @@ async function main(){
     console.error('\n[T19 FAIL]')
     if(primaryError)console.error(primaryError instanceof Error?primaryError.message:String(primaryError))
     if(cleanupError)console.error(`Cleanup failed: ${cleanupError instanceof Error?cleanupError.message:String(cleanupError)}`)
+    try{console.error(`Failure snapshot: ${writeFailureSnapshot(primaryError,cleanupError)}`)}catch(error){console.error(`Failure snapshot write failed: ${error instanceof Error?error.message:String(error)}`)}
     process.exit(1)
   }
   console.log('T19 QR RESPONSIVE UI CHECK: PASS')
