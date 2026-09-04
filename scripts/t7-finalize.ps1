@@ -1,0 +1,190 @@
+﻿Set-StrictMode -Version Latest
+$ErrorActionPreference = 'Stop'
+
+$ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
+$ProjectRoot = Split-Path -Parent $ScriptDir
+Set-Location $ProjectRoot
+
+$ExpectedMigrations = @(
+    '20260829143948_t1_core_foundation.sql',
+    '20260829144121_t1_security_hardening.sql',
+    '20260829150727_t1_private_security_and_rls_performance.sql',
+    '20260829162450_t2_crm_customer_devices.sql',
+    '20260829162924_t2_client_insert_defaults.sql',
+    '20260829162949_t2_device_types_access.sql',
+    '20260830051756_t3_product_inventory.sql',
+    '20260830052012_t3_performance_indexes_and_settings_policy.sql',
+    '20260830080141_t4_sales.sql',
+    '20260830080302_t4_rpc_execution_and_item_uniqueness.sql',
+    '20260830081007_t4_payment_checklist_guard.sql',
+    '20260830082723_t5_repair_schema.sql',
+    '20260830083011_t5_repair_workflow.sql',
+    '20260830083317_t5_repair_part_replan_guard.sql',
+    '20260830093152_t6_checklist_schema.sql',
+    '20260830093342_t6_checklist_workflow_and_sales_bridge.sql',
+    '20260830093439_t6_rls_helper_execute.sql',
+    '20260830105628_t7_warranty_schema.sql',
+    '20260830105854_t7_warranty_workflow.sql',
+    '20260830110030_t7_server_public_lookup_contract.sql',
+    '20260830110102_t7_warranty_inventory_unit_index.sql'
+)
+
+function Get-Stamp { return Get-Date -Format 'yyyyMMdd_HHmmss' }
+
+function Resolve-CommandPath {
+    param([Parameter(Mandatory=$true)][string[]]$Names)
+    foreach ($name in $Names) {
+        $cmd = Get-Command $name -ErrorAction SilentlyContinue
+        if ($null -ne $cmd) { return $cmd.Source }
+    }
+    throw "Khong tim thay lenh: $($Names -join ', ')"
+}
+
+function Invoke-CheckedCommand {
+    param(
+        [Parameter(Mandatory=$true)][string]$FilePath,
+        [Parameter(Mandatory=$false)][string[]]$Arguments = @()
+    )
+    Write-Host ''
+    Write-Host ('> ' + $FilePath + ' ' + ($Arguments -join ' '))
+
+    $previous = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $output = @(& $FilePath @Arguments 2>&1)
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previous
+    }
+
+    if ($null -eq $exitCode) { $exitCode = 0 }
+    foreach ($line in $output) { Write-Host $line }
+
+    if ($exitCode -ne 0) {
+        $text = $output -join [Environment]::NewLine
+        throw "Lenh that bai, exit code ${exitCode}: $FilePath $($Arguments -join ' ')`n$text"
+    }
+}
+
+function Read-ProjectId {
+    $configPath = Join-Path $ProjectRoot 'supabase\config.toml'
+    if (-not (Test-Path $configPath)) { throw 'Khong tim thay supabase/config.toml.' }
+
+    $content = Get-Content -Path $configPath -Raw
+    $match = [regex]::Match($content, '(?m)^\s*project_id\s*=\s*["'']([^"'']+)["'']')
+    if (-not $match.Success) { throw 'Khong doc duoc project_id trong config.toml.' }
+    return $match.Groups[1].Value
+}
+
+function Assert-Migrations {
+    $migrationDir = Join-Path $ProjectRoot 'supabase\migrations'
+    $actual = @(
+        Get-ChildItem -Path $migrationDir -Filter '*.sql' -File |
+        Select-Object -ExpandProperty Name |
+        Sort-Object
+    )
+
+    $missing = @($ExpectedMigrations | Where-Object { $_ -notin $actual })
+    $unexpected = @($actual | Where-Object { $_ -notin $ExpectedMigrations })
+
+    if ($missing.Count -gt 0) { throw ("Thieu migration:`n- " + ($missing -join "`n- ")) }
+    if ($unexpected.Count -gt 0) { throw ("Co migration ngoai checkpoint T7:`n- " + ($unexpected -join "`n- ")) }
+
+    Write-Host '[PASS] Migration T1+T2+T3+T4+T5+T6+T7: 21/21'
+    return $actual
+}
+
+function Invoke-T7SqlVerify {
+    param([Parameter(Mandatory=$true)][string]$Container)
+
+    $verifyFile = Join-Path $ProjectRoot 'supabase\tests\t7_verify.sql'
+    if (-not (Test-Path $verifyFile)) { throw "Khong tim thay $verifyFile" }
+
+    Write-Host ''
+    Write-Host "> docker.exe exec -i $Container psql ... < t7_verify.sql"
+
+    $previous = $ErrorActionPreference
+    try {
+        $ErrorActionPreference = 'Continue'
+        $output = @(
+            Get-Content -Path $verifyFile -Raw |
+            & docker.exe exec -i $Container psql -U postgres -d postgres -v ON_ERROR_STOP=1 2>&1
+        )
+        $exitCode = $LASTEXITCODE
+    }
+    finally {
+        $ErrorActionPreference = $previous
+    }
+
+    foreach ($line in $output) { Write-Host $line }
+    $text = $output -join [Environment]::NewLine
+
+    if ($exitCode -ne 0) { throw "T7 SQL verify fail, psql exit=$exitCode`n$text" }
+    if ($text -notmatch 'T7 FINAL CORE CHECKS: PASS') { throw 'Khong tim thay marker T7 PASS.' }
+
+    return $text
+}
+
+try {
+    Write-Host '=== HomeTechVN T7 v1.1 - Frontend Finalize ==='
+    Write-Host "Project root: $ProjectRoot"
+
+    $npm = Resolve-CommandPath -Names @('npm.cmd','npm')
+    Write-Host "[PASS] npm: $npm"
+
+    $migrations = Assert-Migrations
+    $projectId = Read-ProjectId
+    $container = "supabase_db_$projectId"
+
+    $state = & docker.exe inspect -f '{{.State.Status}}' $container 2>&1
+    if ($LASTEXITCODE -ne 0 -or ($state -join '').Trim() -ne 'running') {
+        throw "Database container khong running: $($state -join ' ')"
+    }
+    Write-Host "[PASS] $container running"
+
+    # Non-destructive: this verifier is transaction/ROLLBACK based.
+    $sqlOutput = Invoke-T7SqlVerify -Container $container
+
+    Write-Host '[INFO] Dong bo app dependencies + package-lock.json'
+    Invoke-CheckedCommand -FilePath $npm -Arguments @('--prefix','app','install','--no-audit','--no-fund')
+    Invoke-CheckedCommand -FilePath $npm -Arguments @('--prefix','app','run','build')
+    Write-Host '[PASS] React/TypeScript/Vite production build'
+
+    $snapshotDir = Join-Path $ProjectRoot 'docs\snapshots'
+    New-Item -ItemType Directory -Path $snapshotDir -Force | Out-Null
+    $snapshotPath = Join-Path $snapshotDir ('T7_LOCAL_VERIFY_' + (Get-Stamp) + '.txt')
+
+    $snapshot = @(
+        'HomeTechVN T7 final local verification',
+        ('Checked: ' + (Get-Date -Format 'yyyy-MM-dd HH:mm:ss zzz')),
+        ('Project: ' + $projectId),
+        '',
+        'Migrations:',
+        ($migrations -join [Environment]::NewLine),
+        '',
+        'SQL VERIFY:',
+        $sqlOutput,
+        '',
+        'APP BUILD: PASS',
+        'T7 LOCAL REPRODUCIBILITY: PASS',
+        'T7 FINAL CORE CHECKS: PASS',
+        'T7 APP BUILD: PASS'
+    )
+    Set-Content -Path $snapshotPath -Value $snapshot -Encoding UTF8
+
+    Write-Host ''
+    Write-Host '=========================================='
+    Write-Host 'T7 LOCAL REPRODUCIBILITY: PASS'
+    Write-Host 'T7 FINAL CORE CHECKS: PASS'
+    Write-Host 'T7 APP BUILD: PASS'
+    Write-Host "Snapshot: $snapshotPath"
+    Write-Host '=========================================='
+    exit 0
+}
+catch {
+    Write-Host ''
+    Write-Host '[T7 FAIL]' -ForegroundColor Red
+    Write-Host $_.Exception.Message -ForegroundColor Red
+    exit 1
+}

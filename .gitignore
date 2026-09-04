@@ -1,6 +1,30 @@
-.DS_Store
-Thumbs.db
+node_modules/
 .env
 .env.*
 !.env.example
+!**/.env.example
+!**/.env.production.example
+.DS_Store
+Thumbs.db
+supabase/.temp/
+supabase/.branches/
 *.log
+dist/
+
+# Local machine snapshots; do not commit
+docs/snapshots/
+docs/legacy_migrations_backup/
+
+# Local config backups
+docs/config_backups/
+
+# Cloudflare Worker local secrets / generated output
+worker/.dev.vars
+worker/.dev.vars.*
+!worker/.dev.vars.example
+worker/.wrangler/
+worker/.t10-dryrun/
+# T15 local backup configuration / secrets / archives
+.backup/
+backup-output/
+*.backup.zip
