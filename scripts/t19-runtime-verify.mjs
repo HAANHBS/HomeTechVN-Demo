@@ -114,7 +114,7 @@ function assertClean(local){
   const counts=JSON.parse(output.split(/\r?\n/).findLast(x=>x.trim().startsWith('{')))
   for(const key of ['users','profiles','customers','sales','repairs','warranties','qr_codes','qr_events','custom_rules'])if(Number(counts[key])!==0)throw new Error(`Dirty baseline: ${key}=${counts[key]}`)
   if(Number(counts.rules)!==12||Number(counts.system_rules)!==12)throw new Error(`Foundation reminder rules changed: ${counts.rules}/${counts.system_rules}`)
-} 
+}
 function writeFailureSnapshot(primary,cleanup){
   const dir=path.join(root,'docs','snapshots');fs.mkdirSync(dir,{recursive:true})
   const d=new Date(),stamp=d.toISOString().replace(/[-:]/g,'').replace('T','_').slice(0,15)
