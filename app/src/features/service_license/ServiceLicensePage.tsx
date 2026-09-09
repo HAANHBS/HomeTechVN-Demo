@@ -32,7 +32,7 @@ function todayIso() {
 
 function ErrorPanel({ message }: { message: string | null }) {
   if (!message) return null
-  return <div className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div>
+  return <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div>
 }
 
 function statusClass(status: string | null | undefined) {
@@ -141,11 +141,11 @@ function ServiceForm({
       <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={description} onChange={(e) => setDescription(e.target.value)} />
     </label>
     {initial ? <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={isActive} onChange={(e) => setIsActive(e.target.checked)} /> Đang hoạt động</label> : null}
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2">
       <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
       <button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang lưu…' : 'Lưu dịch vụ'}</button>
     </div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -243,11 +243,11 @@ function ScheduleForm({
       <label className="text-sm font-medium">Giá<input type="number" min="0" step="1000" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={price} onChange={(e) => setPrice(e.target.value)} /></label>
     </div>
     <label className="block text-sm font-medium">Ghi chú<textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} /></label>
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2">
       <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
       <button disabled={busy || !serviceId || !customerId} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang tạo…' : 'Tạo lịch'}</button>
     </div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -322,8 +322,8 @@ function SoftwareProductForm({
     </div>
     <label className="block text-sm font-medium">Mô tả<textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={description} onChange={(e) => setDescription(e.target.value)} /></label>
     {initial ? <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={active} onChange={(e) => setActive(e.target.checked)} /> Đang hoạt động</label> : null}
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">{busy ? 'Đang lưu…' : 'Lưu sản phẩm'}</button></div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -402,8 +402,8 @@ function LicenseForm({
       <label className="mt-7 flex items-center gap-2 text-sm"><input type="checkbox" checked={autoRenew} onChange={(e) => setAutoRenew(e.target.checked)} /> Tự động gia hạn</label>
     </div>
     <label className="block text-sm font-medium">Ghi chú<textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} /></label>
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy || !productId || !customerId} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">{busy ? 'Đang tạo…' : 'Tạo License'}</button></div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -460,8 +460,8 @@ function ScheduleEditForm({
       <label className="text-sm font-medium">Giá<input type="number" min="0" step="1000" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={price} onChange={(e) => setPrice(e.target.value)} /></label>
     </div>
     <label className="block text-sm font-medium">Ghi chú<textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} /></label>
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">{busy ? 'Đang lưu…' : 'Lưu lịch'}</button></div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -522,8 +522,8 @@ function LicenseEditForm({
     </label>
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={autoRenew} onChange={(e) => setAutoRenew(e.target.checked)} /> Tự động gia hạn</label>
     <label className="block text-sm font-medium">Ghi chú<textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} /></label>
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">{busy ? 'Đang lưu…' : 'Lưu License'}</button></div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -702,6 +702,8 @@ export function ServiceLicensePage({
         </div>
       </div>
 
+      <ErrorPanel message={error} />
+
       {tab === 'schedules' && canViewService ? <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
         <div className="overflow-x-auto"><table className="w-full min-w-[1200px] text-left text-sm">
           <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Dịch vụ</th><th className="px-4 py-3">Khách / Thiết bị</th><th className="px-4 py-3">Chu kỳ</th><th className="px-4 py-3">Đến hạn</th><th className="px-4 py-3">Đã làm</th><th className="px-4 py-3">Giá</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
@@ -726,7 +728,6 @@ export function ServiceLicensePage({
         <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">Nhóm</th><th className="px-4 py-3">Billing</th><th className="px-4 py-3">Term</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>{products.map((p) => <tr key={p.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{p.vendor ? `${p.vendor} · ` : ''}{p.name}</div><div className="text-xs text-slate-500">{p.edition ?? ''} · {p.description ?? ''}</div></td><td className="px-4 py-3">{p.category}</td><td className="px-4 py-3">{p.billing_model}</td><td className="px-4 py-3">{p.default_term_months ? `${p.default_term_months} tháng` : '—'}</td><td className="px-4 py-3">{p.is_active ? <span className="text-emerald-300">ACTIVE</span> : <span className="text-slate-500">INACTIVE</span>}</td><td className="px-4 py-3 text-right">{canManageLicense ? <button onClick={() => setEditingProduct(p)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs">Sửa</button> : '—'}</td></tr>)}</tbody></table></div>
       </section> : null}
 
-      <ErrorPanel message={error} />
     </div>
 
     {showService ? <Modal title="Tạo dịch vụ" onClose={() => setShowService(false)}><ServiceForm onCancel={() => setShowService(false)} onDone={() => { setShowService(false); void load() }} /></Modal> : null}

@@ -49,7 +49,7 @@ function formatOffset(minutes: number) {
 
 function ErrorPanel({ message }: { message: string | null }) {
   if (!message) return null
-  return <div className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div>
+  return <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div>
 }
 
 function RuleForm({
@@ -134,11 +134,11 @@ function RuleForm({
     <label className="block text-sm font-medium">Mô tả
       <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={description} onChange={(e) => setDescription(e.target.value)} />
     </label>
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2">
       <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
       <button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang lưu…' : 'Lưu rule'}</button>
     </div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -315,6 +315,8 @@ export function ReminderPage({
         </div>
       </div>
 
+      <ErrorPanel message={error} />
+
       {lastRun ? <div className="rounded-xl border border-emerald-900 bg-emerald-950/20 p-3 text-xs text-emerald-300">Lần chạy gần nhất: <code>{JSON.stringify(lastRun)}</code></div> : null}
 
       {tab === 'reminders' ? <>
@@ -368,7 +370,6 @@ export function ReminderPage({
         </table></div>
       </section> : null}
 
-      <ErrorPanel message={error} />
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 text-xs text-slate-500">
         T9 chỉ sinh và quản lý reminder. Việc gửi in-app / Telegram / email thuộc T10 Notification. Lịch gọi tự động sẽ đi qua Worker/Cron theo kiến trúc dự án.
       </div>

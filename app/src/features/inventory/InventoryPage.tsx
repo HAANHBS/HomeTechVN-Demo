@@ -36,7 +36,7 @@ function normalize(value: string) {
 
 function ErrorPanel({ message }: { message: string | null }) {
   if (!message) return null
-  return <div className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div>
+  return <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div>
 }
 
 function ProductsTab({ context, initialTarget, initialAction }: { context: AppUserContext; initialTarget?: QrResolved; initialAction?: QrAction }) {

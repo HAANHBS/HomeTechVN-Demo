@@ -28,6 +28,7 @@ function readDemoAccounts(): DemoAccount[] {
 
 export function LoginPage() {
   const demoMode = import.meta.env.VITE_HOMETECHVN_DEMO_MODE === 'true'
+  const hostedDemo = import.meta.env.VITE_HOMETECHVN_HOSTED_DEMO === 'true'
   const demoAccounts = demoMode ? readDemoAccounts() : []
   const demoPassword = demoMode ? import.meta.env.VITE_HOMETECHVN_DEMO_PASSWORD?.trim() ?? '' : ''
   const [email, setEmail] = useState('')
@@ -62,7 +63,7 @@ export function LoginPage() {
           </p>
           <h1 className="mt-3 text-3xl font-bold">Đăng nhập hệ thống</h1>
           <p className="mt-2 text-sm text-slate-400">
-            T17 — Demo tích hợp toàn hệ thống
+            {hostedDemo ? 'T20 — Hosted Demo, chỉ dùng dữ liệu giả định' : 'HomeTechVN — Vận hành toàn hệ thống'}
           </p>
         </div>
 
@@ -118,12 +119,6 @@ export function LoginPage() {
             />
           </label>
 
-          {error ? (
-            <div className="rounded-xl border border-red-900/70 bg-red-950/50 px-4 py-3 text-sm text-red-200">
-              {error}
-            </div>
-          ) : null}
-
           <button
             className="w-full rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-slate-950 transition hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-60"
             type="submit"
@@ -131,6 +126,12 @@ export function LoginPage() {
           >
             {busy ? 'Đang đăng nhập…' : 'Đăng nhập'}
           </button>
+
+          {error ? (
+            <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900/70 bg-red-950/50 px-4 py-3 text-sm text-red-200">
+              {error}
+            </div>
+          ) : null}
         </form>
       </div>
     </main>

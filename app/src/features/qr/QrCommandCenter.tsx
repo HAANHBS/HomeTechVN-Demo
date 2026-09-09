@@ -206,7 +206,7 @@ export function QrCommandCenter({
             <button disabled={busy} className="w-full rounded-xl bg-cyan-500 px-4 py-3 font-semibold text-slate-950 disabled:opacity-50">{busy?'Đang tạo…':'Tạo QR an toàn'}</button>
             {issued && image ? <div className="rounded-2xl border border-cyan-900 bg-white p-4 text-center"><img src={image} alt={`QR ${issued.label}`} className="mx-auto w-full max-w-[300px]"/><div className="mt-2 font-mono text-sm font-semibold text-slate-900">{issued.label}</div><div className="mt-3 flex justify-center gap-2"><button type="button" onClick={download} className="rounded-xl bg-slate-900 px-4 py-2 text-sm text-white">Tải PNG</button>{canRevoke?<button type="button" onClick={() => void revoke()} className="rounded-xl border border-red-300 px-4 py-2 text-sm text-red-700">Thu hồi</button>:null}</div></div> : null}
           </form> : null}
-          {error ? <div className="rounded-xl border border-red-900 bg-red-950/30 p-3 text-sm text-red-200">{error}</div> : null}
+          {error ? <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-3 text-sm text-red-200">{error}</div> : null}
           <p className="text-xs leading-5 text-slate-500">Không nhập mật khẩu, khóa bản quyền, dữ liệu thẻ hoặc thông tin bí mật vào QR. Thanh toán QR chỉ mở đơn và form thu tiền; không tự xác nhận chuyển khoản ngân hàng.</p>
         </div>
       </section>

@@ -29,7 +29,7 @@ function parseLines(value: string) {
 function ErrorBox({ message }: { message: string | null }) {
   if (!message) return null
   return (
-    <div className="rounded-xl border border-red-900/70 bg-red-950/40 px-4 py-3 text-sm text-red-200">
+    <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900/70 bg-red-950/40 px-4 py-3 text-sm text-red-200">
       {message}
     </div>
   )
@@ -143,8 +143,8 @@ export function CategoryForm({
           Đang sử dụng
         </label>
       </div>
-      <ErrorBox message={error} />
       <FormActions busy={busy} onCancel={onCancel} submitLabel={initial ? 'Cập nhật' : 'Tạo danh mục'} />
+      <ErrorBox message={error} />
     </form>
   )
 }
@@ -298,8 +298,8 @@ export function ProductForm({
         </label>
       </div>
       {initial ? <p className="text-xs text-slate-500">SKU không thể đổi. Chế độ Serial chỉ đổi được trước khi sản phẩm có phát sinh kho.</p> : null}
-      <ErrorBox message={error} />
       <FormActions busy={busy} onCancel={onCancel} submitLabel={initial ? 'Cập nhật sản phẩm' : 'Tạo sản phẩm'} />
+      <ErrorBox message={error} />
     </form>
   )
 }
@@ -404,8 +404,8 @@ export function ReceiveForm({
         Ghi chú
         <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 outline-none focus:border-cyan-500" value={note} onChange={(event) => setNote(event.target.value)} />
       </label>
-      <ErrorBox message={error} />
       <FormActions busy={busy} onCancel={onCancel} submitLabel="Nhập kho" />
+      <ErrorBox message={error} />
     </form>
   )
 }
@@ -545,8 +545,8 @@ export function IssueForm({
         Ghi chú
         <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 outline-none focus:border-cyan-500" value={note} onChange={(event) => setNote(event.target.value)} />
       </label>
-      <ErrorBox message={error} />
       <FormActions busy={busy} onCancel={onCancel} submitLabel="Xuất kho" />
+      <ErrorBox message={error} />
     </form>
   )
 }
@@ -679,8 +679,8 @@ export function AdjustForm({
         Lý do điều chỉnh
         <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 outline-none focus:border-cyan-500" value={note} onChange={(event) => setNote(event.target.value)} required />
       </label>
-      <ErrorBox message={error} />
       <FormActions busy={busy} onCancel={onCancel} submitLabel="Xác nhận điều chỉnh" />
+      <ErrorBox message={error} />
     </form>
   )
 }

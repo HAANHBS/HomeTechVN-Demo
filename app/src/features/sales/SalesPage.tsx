@@ -14,6 +14,7 @@ import { supabase } from '../../lib/supabase'
 import { Modal } from '../crm/forms'
 import { CreateOrderForm, EditOrderForm, ItemForm, PaymentForm, TextActionForm } from './forms'
 import type { QrAction, QrResolved } from '../qr/QrCommandCenter'
+import { WorkflowGuide, type WorkflowBlocker, type WorkflowGuideStep } from '../../components/WorkflowGuide'
 
 function money(value: number | null | undefined) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value ?? 0)
@@ -33,7 +34,7 @@ function parseChecklist(value: SalesOrderRow['checklist']): SalesChecklistItem[]
   return value.filter((x): x is SalesChecklistItem => Boolean(x && typeof x === 'object' && !Array.isArray(x) && 'key' in x && 'label' in x))
 }
 function ErrorPanel({ message }: { message: string | null }) {
-  return message ? <div className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div> : null
+  return message ? <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div> : null
 }
 
 function OrderList({
@@ -175,6 +176,42 @@ function OrderDetail({
   useEffect(() => { void load() }, [load])
   const customer = useMemo(() => customers.find((c) => c.id === order?.customer_id), [customers, order?.customer_id])
   const checklist = useMemo(() => order ? parseChecklist(order.checklist) : [], [order])
+  const hasSerial = useMemo(() => items.some((item) => item.inventory_unit_ids.length > 0), [items])
+  const requiredChecklist = useMemo(() => checklist.filter((item) => item.required || (item.key === 'serial_numbers' && hasSerial)), [checklist, hasSerial])
+  const preHandoverChecklist = useMemo(() => requiredChecklist.filter((item) => item.key !== 'customer_delivery_confirmation'), [requiredChecklist])
+  const missingPreHandover = useMemo(() => preHandoverChecklist.filter((item) => !item.checked), [preHandoverChecklist])
+  const missingRequired = useMemo(() => requiredChecklist.filter((item) => !item.checked), [requiredChecklist])
+  const paymentMatches = Number(order?.paid_amount ?? 0) === Number(order?.total_amount ?? 0)
+  const salesWorkflow = useMemo<WorkflowGuideStep[]>(() => {
+    if (!order) return []
+    const customerConfirmed = checklist.find((item) => item.key === 'customer_delivery_confirmation')?.checked === true
+    return [
+      { label: 'Lập đơn và thêm hàng', done: items.length > 0, detail: items.length ? `${items.length} dòng hàng` : 'Chưa có dòng hàng' },
+      { label: 'Xác nhận và xuất kho', done: Boolean(order.confirmed_at), detail: order.confirmed_at ? dateTime(order.confirmed_at) : 'Bộ phận bán hàng' },
+      { label: 'Thu đủ tiền', done: paymentMatches && Boolean(order.paid_at), detail: `${money(order.paid_amount)} / ${money(order.total_amount)}` },
+      { label: 'Kiểm tra trước bàn giao', done: missingPreHandover.length === 0 && Boolean(order.confirmed_at), detail: `${preHandoverChecklist.length - missingPreHandover.length}/${preHandoverChecklist.length} mục` },
+      { label: 'Bàn giao cho khách', done: Boolean(order.delivered_at), detail: order.delivered_at ? dateTime(order.delivered_at) : 'Chỉ mở khi các bước trước đã xong' },
+      { label: 'Khách xác nhận nhận đủ', done: customerConfirmed, detail: 'Xác nhận sau khi giao thực tế' },
+      { label: 'Hoàn tất đơn', done: order.status === 'COMPLETED', detail: order.completed_at ? dateTime(order.completed_at) : undefined },
+    ]
+  }, [checklist, items.length, missingPreHandover.length, order, paymentMatches, preHandoverChecklist.length])
+  const salesBlockers = useMemo<WorkflowBlocker[]>(() => {
+    if (!order || ['COMPLETED','CANCELLED'].includes(order.status)) return []
+    if (order.status === 'DRAFT') return items.length ? [] : [{ department: 'BÁN HÀNG', action: 'Thêm ít nhất một dòng hàng trước khi xác nhận đơn.' }]
+    if (['CONFIRMED','PAYMENT_PENDING'].includes(order.status)) {
+      return [{ department: 'THU NGÂN', action: `Thu đúng số còn lại ${money(order.balance_due)}; tổng thu phải bằng giá bán ${money(order.total_amount)}.` }]
+    }
+    if (order.status === 'PAID') {
+      return missingPreHandover.map((item) => ({
+        department: item.key === 'payment_confirmed' ? 'THU NGÂN' : 'BÁN HÀNG / KỸ THUẬT',
+        action: item.label,
+      }))
+    }
+    if (order.status === 'DELIVERED') {
+      return missingRequired.map((item) => ({ department: 'BÁN HÀNG', action: item.label }))
+    }
+    return []
+  }, [items.length, missingPreHandover, missingRequired, order])
 
   async function rpc(name: 'sale_confirm'|'sale_deliver'|'sale_complete', label: string) {
     if (!order) return
@@ -227,10 +264,13 @@ function OrderDetail({
       {order.status === 'DRAFT' && canUpdate ? <button onClick={() => setModal('add-item')} className="rounded-xl border border-cyan-900 px-3 py-2 text-sm text-cyan-300">+ Dòng hàng</button> : null}
       {order.status === 'DRAFT' && canUpdate && items.length > 0 ? <button disabled={Boolean(busyAction)} onClick={() => void rpc('sale_confirm','xác nhận đơn')} className="rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950">Xác nhận & trừ kho</button> : null}
       {(order.status === 'CONFIRMED' || order.status === 'PAYMENT_PENDING') && canPay && (order.balance_due ?? 0) > 0 ? <button onClick={() => setModal('payment')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950">Thu tiền</button> : null}
-      {order.status === 'PAID' && canUpdate ? <button disabled={Boolean(busyAction)} onClick={() => void rpc('sale_deliver','bàn giao')} className="rounded-xl bg-violet-500 px-3 py-2 text-sm font-semibold text-white">Bàn giao</button> : null}
-      {order.status === 'DELIVERED' && canUpdate ? <button disabled={Boolean(busyAction)} onClick={() => void rpc('sale_complete','hoàn tất')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950">COMPLETED</button> : null}
+      {order.status === 'PAID' && canUpdate ? <button disabled={Boolean(busyAction) || missingPreHandover.length > 0 || !paymentMatches} title={missingPreHandover.length ? 'Hoàn thành các mục kiểm tra bên dưới trước khi bàn giao' : undefined} onClick={() => void rpc('sale_deliver','bàn giao')} className="rounded-xl bg-violet-500 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Bàn giao</button> : null}
+      {order.status === 'DELIVERED' && canUpdate ? <button disabled={Boolean(busyAction) || missingRequired.length > 0 || !paymentMatches} title={missingRequired.length ? 'Hoàn thành checklist, gồm xác nhận khách đã nhận đủ hàng' : undefined} onClick={() => void rpc('sale_complete','hoàn tất')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">COMPLETED</button> : null}
       {['DRAFT','CONFIRMED','PAYMENT_PENDING'].includes(order.status) && canCancel && order.paid_amount === 0 ? <button onClick={() => setModal('cancel')} className="rounded-xl border border-red-900 px-3 py-2 text-sm text-red-300">Hủy đơn</button> : null}
     </div>
+
+    <ErrorPanel message={error} />
+    <WorkflowGuide title="Quy trình bán hàng và bàn giao" steps={salesWorkflow} blockers={salesBlockers} />
 
     <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3"><h3 className="font-semibold text-white">Dòng hàng</h3><span className="text-xs text-slate-500">{items.length} sản phẩm</span></div>
@@ -261,8 +301,6 @@ function OrderDetail({
       {order.cancelled_at ? <div className="mt-2 text-red-300">Hủy: {dateTime(order.cancelled_at)} · {order.cancelled_reason}</div> : null}
       {order.note ? <div className="mt-2">Ghi chú: {order.note}</div> : null}
     </div>
-
-    <ErrorPanel message={error} />
 
     {modal === 'edit-order' ? <Modal title="Sửa đơn DRAFT" onClose={() => setModal(null)}><EditOrderForm order={order} customers={customers} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
     {modal === 'add-item' ? <Modal title="Thêm dòng hàng" onClose={() => setModal(null)}><ItemForm orderId={order.id} products={products} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}

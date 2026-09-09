@@ -1,15 +1,14 @@
-# HomeTechVN Management — T19 Universal QR Candidate
+# HomeTechVN Management — T20.2 Operational Logic
 
-Current candidate: `0.19.0-t19.0`. T19 adds authenticated QR issue/scan/revoke for 14 business resource types and CREATE / VIEW / EDIT / PAY intents. Migrations #1–#36 remain locked; T19 adds migration #37 only.
+Current release: `0.20.2-t20.2`. Migrations #1–#40 are deployed and locked.
+Payment totals, ledger reconciliation, workflow prerequisites, automatic sale
+warranty and authenticated serial/QR warranty scanning are accepted against
+hosted fictional data. Demo Admin receives all application RBAC permissions;
+anonymous/database-private access remains closed.
 
-Windows acceptance:
-
-```powershell
-cd D:\HOMETECHVN
-npm run t19:verify
-```
-
-See `docs/T19_UNIVERSAL_QR_OPERATIONS.md` and `docs/T19_RUNBOOK.md`. Payment QR is a sandbox workflow opener, not confirmation from a real bank or payment provider.
+From T20.2 onward acceptance is automated on the hosted fake-data project. PC or
+Windows acceptance is not required. See `docs/T20_STATUS.md` and
+`docs/T20_RUNBOOK.md`.
 
 ---
 
@@ -885,3 +884,21 @@ T18 v1.3 passed all seven Windows acceptance gates on 2026-09-04 and is now
 COMPLETE & LOCKED. The accepted deployable release remains the Windows-created
 `HOMETECHVN_T18_RELEASE_20260904_011535.zip` with SHA-256
 `473e12c80062632f95412e43a8eb39a0e1192e2abc701c96ff76e90e1518547e`.
+
+## T19 FINAL — Universal QR Operations
+
+T19 is COMPLETE & LOCKED. Migration #37 adds authenticated QR issue, resolve,
+revoke, CREATE, VIEW, EDIT and sandbox PAY routing across 14 resource types.
+The accepted FINAL ZIP SHA-256 is
+`621cc2da8587b6c5ad2c7844dd2a59f4eebcbd3f8b94a6fcea56e01cec16a0d0`.
+
+## T20.2 — OPERATIONAL LOGIC + HOSTED DEMO ACCEPTANCE
+
+Migration #38 hardens private cost tables. Migration #39 enforces sale totals,
+payment ledger integrity, exact normal payment, explicit partial payment,
+handover/repair prerequisites and automatic warranty creation. Migration #40
+removes unnecessary public management RPCs and completes QR foreign-key indexes.
+
+`supabase/tests/t20_demo_acceptance.sql` verifies the complete workflow inside a
+rolling-back transaction. `npm run t20:demo-gate` verifies source, UI error
+placement, workflow guidance, TypeScript/Vite/PWA output and Worker syntax.

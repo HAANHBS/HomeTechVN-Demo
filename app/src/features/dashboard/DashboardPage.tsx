@@ -62,7 +62,7 @@ function date(value: string | null | undefined) {
 }
 
 function ErrorPanel({ message }: { message: string | null }) {
-  return message ? <div className="rounded-2xl border border-red-900/70 bg-red-950/30 p-4 text-sm text-red-200">{message}</div> : null
+  return message ? <div role="alert" aria-live="assertive" className="rounded-2xl border border-red-900/70 bg-red-950/30 p-4 text-sm text-red-200">{message}</div> : null
 }
 
 function KpiCard({

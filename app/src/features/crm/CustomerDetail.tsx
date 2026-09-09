@@ -112,7 +112,7 @@ export function CustomerDetail({
   if (error || !customer) {
     return (
       <div className="rounded-2xl border border-red-900 bg-red-950/20 p-6">
-        <p className="text-red-200">{error ?? 'Không tìm thấy khách hàng.'}</p>
+        <p role="alert" aria-live="assertive" className="text-red-200">{error ?? 'Không tìm thấy khách hàng.'}</p>
         <button className="mt-4 rounded-xl border border-slate-700 px-4 py-2" onClick={onBack}>Quay lại</button>
       </div>
     )

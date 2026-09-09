@@ -33,7 +33,7 @@ function statusClass(status: string | null | undefined) {
 }
 
 function ErrorPanel({ message }: { message: string | null }) {
-  return message ? <div className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div> : null
+  return message ? <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div> : null
 }
 
 function StartRunForm({
@@ -124,11 +124,11 @@ function StartRunForm({
     <label className="block text-sm font-medium">Ghi chú
       <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} />
     </label>
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2">
       <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
       <button disabled={busy || !templateId || !entityId} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang tạo…' : 'Bắt đầu checklist'}</button>
     </div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -186,11 +186,11 @@ function CreateTemplateForm({ onCancel, onCreated }: { onCancel: () => void; onC
     <label className="block text-sm font-medium">Mô tả
       <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={description} onChange={(e) => setDescription(e.target.value)} />
     </label>
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2">
       <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
       <button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang tạo…' : 'Tạo version mới'}</button>
     </div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -260,11 +260,11 @@ function AddTemplateItemForm({
     <label className="block text-sm font-medium">Mô tả
       <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={description} onChange={(e) => setDescription(e.target.value)} />
     </label>
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2">
       <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
       <button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang thêm…' : 'Thêm item'}</button>
     </div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -365,10 +365,13 @@ function RunDetail({
 
     <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-slate-900 p-4">
       {run.status === 'OPEN' ? <button disabled={busy} onClick={() => void action('checklist_run_refresh')} className="rounded-xl border border-cyan-900 px-3 py-2 text-sm text-cyan-300">Đồng bộ</button> : null}
-      {run.status === 'OPEN' ? <button disabled={busy} onClick={() => void action('checklist_run_complete')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950">Hoàn tất checklist</button> : null}
+      {run.status === 'OPEN' ? <button disabled={busy || requiredDone < required.length} title={requiredDone < required.length ? `Còn ${required.length-requiredDone} mục bắt buộc chưa hoàn thành` : undefined} onClick={() => void action('checklist_run_complete')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">Hoàn tất checklist</button> : null}
       {run.status === 'COMPLETED' && canManage ? <button onClick={() => void reopen()} className="rounded-xl border border-amber-800 px-3 py-2 text-sm text-amber-300">Mở lại</button> : null}
       {run.status !== 'CANCELLED' && canManage ? <button onClick={() => void cancel()} className="rounded-xl border border-red-900 px-3 py-2 text-sm text-red-300">Hủy run</button> : null}
     </div>
+    <ErrorPanel message={error} />
+
+    {run.status === 'OPEN' && requiredDone < required.length ? <div className="rounded-xl border border-amber-900/70 bg-amber-950/20 p-3 text-sm text-amber-100"><strong>Chưa thể hoàn tất:</strong> còn {required.length-requiredDone} mục bắt buộc. Hãy hoàn thành các mục chưa đánh dấu bên dưới; mục SYSTEM phải hoàn tất ở đúng bộ phận nghiệp vụ.</div> : null}
 
     <section className="space-y-2">
       {items.map((item) => <label key={item.id} className={`flex items-start gap-3 rounded-xl border p-4 ${item.checked ? 'border-emerald-900 bg-emerald-950/20' : 'border-slate-800 bg-slate-900'}`}>
@@ -391,7 +394,6 @@ function RunDetail({
       </label>)}
     </section>
 
-    <ErrorPanel message={error} />
   </div>
 }
 

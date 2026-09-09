@@ -28,7 +28,7 @@ function statusClass(status: string | null | undefined) {
 }
 
 function ErrorPanel({ message }: { message: string | null }) {
-  return message ? <div className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div> : null
+  return message ? <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{message}</div> : null
 }
 
 function jsonObject(value: Json | null): Record<string, Json> {
@@ -94,11 +94,11 @@ function RuleRouteEditor({
       </label>)}
     </fieldset>
 
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2">
       <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
       <button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang lưu…' : 'Lưu routing'}</button>
     </div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -173,11 +173,11 @@ function ChannelEditor({
       <input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm" value={secretRef} onChange={(e) => setSecretRef(e.target.value)} placeholder="env://..." />
       <span className="mt-1 block text-xs text-amber-300">Không nhập token/API key thật vào đây. Chỉ nhập URI tham chiếu secret.</span>
     </label> : null}
-    <ErrorPanel message={error} />
     <div className="flex justify-end gap-2">
       <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
       <button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang lưu…' : 'Lưu kênh'}</button>
     </div>
+    <ErrorPanel message={error} />
   </form>
 }
 
@@ -331,6 +331,8 @@ export function NotificationPage({
         </div>
       </div>
 
+      <ErrorPanel message={error} />
+
       {lastPrepare ? <div className="rounded-xl border border-emerald-900 bg-emerald-950/20 p-3 text-xs text-emerald-300"><code>{JSON.stringify(lastPrepare)}</code></div> : null}
 
       {tab === 'inbox' ? <section className="space-y-2">
@@ -380,7 +382,6 @@ export function NotificationPage({
         <tbody>{logs.map((l) => <tr key={l.id} className="border-t border-slate-800"><td className="px-4 py-3">#{l.attempt_no}<div className="font-mono text-[10px] text-slate-500">{l.notification_id}</div></td><td className="px-4 py-3">{l.channel}<div className="text-xs text-slate-500">{l.provider}</div></td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(l.status)}`}>{l.status}</span></td><td className="px-4 py-3 font-mono text-xs">{l.external_message_id ?? '—'}</td><td className="px-4 py-3 text-xs text-red-300">{l.error_code ? `${l.error_code}: ${l.error_message ?? ''}` : '—'}</td><td className="px-4 py-3 text-xs">{dateTime(l.started_at)}<br/>{dateTime(l.finished_at)}</td></tr>)}</tbody>
       </table></div></div> : null}
 
-      <ErrorPanel message={error} />
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 text-xs text-slate-500">
         Token Telegram, email API key và Zalo access token không được lưu trong frontend/DB value. Worker đọc secret từ Cloudflare và database chỉ giữ `env://...` reference.
       </div>

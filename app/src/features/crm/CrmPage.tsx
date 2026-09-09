@@ -134,7 +134,7 @@ function CustomerList({
         </div>
         {loading ? <p className="p-6 text-center text-slate-500">Đang tải…</p> : null}
         {!loading && filtered.length === 0 ? <p className="p-8 text-center text-sm text-slate-500">Không có khách hàng phù hợp.</p> : null}
-        {error ? <p className="border-t border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{error}</p> : null}
+        {error ? <p role="alert" aria-live="assertive" className="border-t border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{error}</p> : null}
       </section>
 
       {showCreate ? (
@@ -281,7 +281,7 @@ function DeviceList({
         </div>
         {loading ? <p className="p-6 text-center text-slate-500">Đang tải…</p> : null}
         {!loading && filtered.length === 0 ? <p className="p-8 text-center text-sm text-slate-500">Không có thiết bị phù hợp.</p> : null}
-        {error ? <p className="border-t border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{error}</p> : null}
+        {error ? <p role="alert" aria-live="assertive" className="border-t border-red-900 bg-red-950/30 p-4 text-sm text-red-200">{error}</p> : null}
       </section>
     </div>
   )

@@ -1459,6 +1459,16 @@ export type Database = {
         }
         Returns: Json
       }
+      sale_record_partial_payment: {
+        Args: {
+          p_order_id: string
+          p_amount: number
+          p_payment_method: string
+          p_reference_no?: string
+          p_note?: string
+        }
+        Returns: Json
+      }
       sale_refund_payment: {
         Args: { p_payment_id: string; p_refund_note: string }
         Returns: Json
@@ -1576,6 +1586,10 @@ export type Database = {
       }
       warranty_create_sale: {
         Args: { p_sales_order_item_id: string; p_inventory_unit_id?: string; p_customer_device_id?: string; p_start_date?: string; p_warranty_months?: number; p_coverage?: string; p_note?: string }
+        Returns: Json
+      }
+      warranty_scan_product: {
+        Args: { p_query: string }
         Returns: Json
       }
       warranty_create_repair: {

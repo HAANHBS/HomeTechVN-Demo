@@ -335,7 +335,7 @@ export function AuditPage({ context }: { context: AppUserContext }) {
         </form>
 
         {error ? (
-          <div className="rounded-2xl border border-red-900/70 bg-red-950/30 p-4 text-sm text-red-200">{error}</div>
+          <div role="alert" aria-live="assertive" className="rounded-2xl border border-red-900/70 bg-red-950/30 p-4 text-sm text-red-200">{error}</div>
         ) : null}
 
         <section className="rounded-3xl border border-slate-800 bg-slate-900/90 p-4 sm:p-5">

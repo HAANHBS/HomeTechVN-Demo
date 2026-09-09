@@ -313,7 +313,7 @@ select public.sale_record_payment(
 
 -- A non-zero PARTIAL payment is required by the T4 state machine to enter
 -- PAYMENT_PENDING and set payment_pending_at for the RECEIVABLE_DUE reminder.
-select public.sale_record_payment(
+select public.sale_record_partial_payment(
   (select id from public.sales_orders where note='T17 DEMO RECEIVABLE'),
   100000,
   'BANK_TRANSFER','DEMO-AR-001','T17 DEMO partial receivable payment'

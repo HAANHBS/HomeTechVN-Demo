@@ -154,7 +154,6 @@ export function CustomerForm({
         Địa chỉ
         <textarea className={inputClass} rows={3} value={address} onChange={(e) => setAddress(e.target.value)} />
       </label>
-      {error ? <p className="rounded-xl bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p> : null}
       <div className="flex justify-end gap-3">
         <button type="button" className="rounded-xl border border-slate-700 px-4 py-2" onClick={onCancel}>
           Hủy
@@ -163,6 +162,7 @@ export function CustomerForm({
           {busy ? 'Đang lưu…' : initial ? 'Cập nhật' : 'Tạo khách hàng'}
         </button>
       </div>
+      {error ? <p role="alert" aria-live="assertive" className="rounded-xl bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p> : null}
     </form>
   )
 }
@@ -289,13 +289,13 @@ export function DeviceForm({
         Tình trạng / Ghi chú thiết bị
         <textarea className={inputClass} rows={3} value={conditionNotes} onChange={(e) => setConditionNotes(e.target.value)} />
       </label>
-      {error ? <p className="rounded-xl bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p> : null}
       <div className="flex justify-end gap-3">
         <button type="button" className="rounded-xl border border-slate-700 px-4 py-2" onClick={onCancel}>Hủy</button>
         <button type="submit" disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-60">
           {busy ? 'Đang lưu…' : initial ? 'Cập nhật thiết bị' : 'Thêm thiết bị'}
         </button>
       </div>
+      {error ? <p role="alert" aria-live="assertive" className="rounded-xl bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p> : null}
     </form>
   )
 }
@@ -376,13 +376,13 @@ export function NoteForm({
         Nội dung *
         <textarea className={inputClass} rows={5} value={content} onChange={(e) => setContent(e.target.value)} required />
       </label>
-      {error ? <p className="rounded-xl bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p> : null}
       <div className="flex justify-end gap-3">
         <button type="button" className="rounded-xl border border-slate-700 px-4 py-2" onClick={onCancel}>Hủy</button>
         <button type="submit" disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-60">
           {busy ? 'Đang lưu…' : initial ? 'Cập nhật ghi chú' : 'Thêm ghi chú'}
         </button>
       </div>
+      {error ? <p role="alert" aria-live="assertive" className="rounded-xl bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p> : null}
     </form>
   )
 }

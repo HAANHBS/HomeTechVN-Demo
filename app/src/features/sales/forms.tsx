@@ -15,7 +15,7 @@ function parseNumber(value: string) {
 
 function ErrorBox({ message }: { message: string | null }) {
   if (!message) return null
-  return <div className="rounded-xl border border-red-900 bg-red-950/30 p-3 text-sm text-red-200">{message}</div>
+  return <div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-3 text-sm text-red-200">{message}</div>
 }
 
 function Actions({ busy, onCancel, label }: { busy: boolean; onCancel: () => void; label: string }) {
@@ -68,8 +68,8 @@ export function CreateOrderForm({
     <label className="block text-sm font-medium">Ghi chú
       <textarea className="mt-2 min-h-24 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} />
     </label>
-    <ErrorBox message={error} />
     <Actions busy={busy} onCancel={onCancel} label="Tạo đơn" />
+    <ErrorBox message={error} />
   </form>
 }
 
@@ -117,8 +117,8 @@ export function EditOrderForm({
     <label className="block text-sm font-medium">Ghi chú
       <textarea className="mt-2 min-h-24 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} />
     </label>
-    <ErrorBox message={error} />
     <Actions busy={busy} onCancel={onCancel} label="Lưu đơn" />
+    <ErrorBox message={error} />
   </form>
 }
 
@@ -245,8 +245,8 @@ export function ItemForm({
       </div>
     ) : null}
 
-    <ErrorBox message={error} />
     <Actions busy={busy} onCancel={onCancel} label={initial ? 'Cập nhật dòng' : 'Thêm dòng'} />
+    <ErrorBox message={error} />
   </form>
 }
 
@@ -259,7 +259,7 @@ export function PaymentForm({
   onCancel: () => void
   onDone: () => void
 }) {
-  const [amount, setAmount] = useState(String(order.balance_due ?? 0))
+  const amount = Number(order.balance_due ?? 0)
   const [method, setMethod] = useState('CASH')
   const [reference, setReference] = useState('')
   const [note, setNote] = useState('')
@@ -269,26 +269,42 @@ export function PaymentForm({
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(null)
     try {
-      const { error: rpcError } = await supabase.rpc('sale_record_payment', {
+      if (amount <= 0) throw new Error('Đơn không còn số tiền phải thu.')
+      const totalMinor = Math.round(Number(order.total_amount ?? 0) * 100)
+      const paidMinor = Math.round(Number(order.paid_amount ?? 0) * 100)
+      const amountMinor = Math.round(amount * 100)
+      if (totalMinor - paidMinor !== amountMinor) {
+        throw new Error('Số còn phải thu không khớp với giá bán. Hãy đóng cửa sổ và tải lại đơn.')
+      }
+      const { data, error: rpcError } = await supabase.rpc('sale_record_payment', {
         p_order_id: order.id,
-        p_amount: parseNumber(amount),
+        p_amount: amount,
         p_payment_method: method,
         p_reference_no: reference.trim() || undefined,
         p_note: note.trim() || undefined,
       })
       if (rpcError) throw rpcError
+      const updatedOrder = typeof data === 'object' && data && !Array.isArray(data)
+        ? ((data as Record<string, unknown>).order as Record<string, unknown> | undefined)
+        : undefined
+      if (!updatedOrder || Math.round(Number(updatedOrder.paid_amount) * 100) !== Math.round(Number(updatedOrder.total_amount) * 100)) {
+        throw new Error('Thanh toán chưa khớp tổng giá bán. Hệ thống chưa xác nhận giao dịch.')
+      }
       onDone()
     } catch (err) { setError(err instanceof Error ? err.message : 'Không ghi được thanh toán.') }
     finally { setBusy(false) }
   }
 
   return <form className="space-y-4" onSubmit={submit}>
-    <div className="rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-sm">
-      Còn phải thu: <strong className="text-amber-300">{new Intl.NumberFormat('vi-VN').format(order.balance_due ?? 0)} đ</strong>
+    <div className="grid gap-2 rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-sm sm:grid-cols-3">
+      <div>Giá bán: <strong className="block text-cyan-300">{new Intl.NumberFormat('vi-VN').format(order.total_amount ?? 0)} đ</strong></div>
+      <div>Đã thu: <strong className="block text-emerald-300">{new Intl.NumberFormat('vi-VN').format(order.paid_amount ?? 0)} đ</strong></div>
+      <div>Thu lần này: <strong className="block text-amber-300">{new Intl.NumberFormat('vi-VN').format(amount)} đ</strong></div>
     </div>
     <div className="grid gap-4 sm:grid-cols-2">
       <label className="text-sm font-medium">Số tiền
-        <input type="number" min="1" step="1000" max={order.balance_due ?? undefined} className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={amount} onChange={(e) => setAmount(e.target.value)} />
+        <input type="number" readOnly aria-readonly="true" className="mt-2 w-full cursor-not-allowed rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-amber-200" value={amount} />
+        <span className="mt-1 block text-xs text-slate-500">Khóa theo số còn phải thu để không lệch giá bán.</span>
       </label>
       <label className="text-sm font-medium">Phương thức
         <select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={method} onChange={(e) => setMethod(e.target.value)}>
@@ -302,8 +318,8 @@ export function PaymentForm({
     <label className="block text-sm font-medium">Ghi chú
       <input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} />
     </label>
+    <Actions busy={busy} onCancel={onCancel} label={`Thu đủ ${new Intl.NumberFormat('vi-VN').format(amount)} đ`} />
     <ErrorBox message={error} />
-    <Actions busy={busy} onCancel={onCancel} label="Ghi thanh toán" />
   </form>
 }
 
@@ -333,7 +349,7 @@ export function TextActionForm({
 
   return <form className="space-y-4" onSubmit={submit}>
     <textarea autoFocus required className="min-h-28 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" placeholder={placeholder} value={text} onChange={(e) => setText(e.target.value)} />
-    <ErrorBox message={error} />
     <Actions busy={busy} onCancel={onCancel} label={submitLabel} />
+    <ErrorBox message={error} />
   </form>
 }

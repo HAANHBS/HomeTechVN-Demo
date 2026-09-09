@@ -102,7 +102,7 @@ export function PublicWarrantyPage({ token }: { token: string | null }) {
         <div className="text-center"><div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-700 border-t-cyan-400"/><p className="mt-4 text-sm text-slate-400">Đang kiểm tra bảo hành…</p></div>
       </section> : null}
 
-      {error ? <section className="rounded-3xl border border-red-900 bg-red-950/30 p-6 text-center">
+      {error ? <section role="alert" aria-live="assertive" className="rounded-3xl border border-red-900 bg-red-950/30 p-6 text-center">
         <h2 className="font-semibold text-red-300">Không thể tra cứu</h2>
         <p className="mt-2 text-sm leading-6 text-red-200/80">{error}</p>
         <button type="button" onClick={() => void load()} className="mt-4 rounded-xl border border-red-800 px-4 py-2 text-sm text-red-200">Thử lại</button>

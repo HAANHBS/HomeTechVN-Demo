@@ -108,7 +108,7 @@ function percent(value: unknown) {
 
 function ErrorPanel({ message }: { message: string | null }) {
   return message ? (
-    <div className="rounded-2xl border border-red-900/70 bg-red-950/30 p-4 text-sm text-red-200">
+    <div role="alert" aria-live="assertive" className="rounded-2xl border border-red-900/70 bg-red-950/30 p-4 text-sm text-red-200">
       {message}
     </div>
   ) : null
