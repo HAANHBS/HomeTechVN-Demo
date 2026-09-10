@@ -48,3 +48,8 @@ T20 PC ACCEPTANCE REQUIRED: NO
 The hosted scanner resolved `DEMO-T20-SN-001` to an ACTIVE sale warranty and
 returned the related order, product and customer. No Windows/PC acceptance is
 required from T20.2 onward.
+
+GitHub PR #1 merged successfully as source merge
+`09cabc831e7a2fb45fa03b5aa7ff8dab4f951a1c`. Sites production version 4
+deployed successfully at
+`https://hometechvn-demo.maytinhhaanhbs.chatgpt.site`.

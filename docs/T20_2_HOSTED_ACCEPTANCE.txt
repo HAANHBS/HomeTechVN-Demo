@@ -1,0 +1,35 @@
+HomeTechVN T20.2 hosted fake-data acceptance
+Date: 2026-09-10 UTC
+Status: COMPLETE & LOCKED
+
+Supabase hosted project: puqvbenyenwemfbsqpfd
+Project health: ACTIVE_HEALTHY
+Hosted migration count: 40
+Locked migrations: #1-#40
+Next migration: #41
+Data contract: HOSTED_DEMO / contains_real_customer_data=false
+
+T20 AUTOMATED FAKE-DATA ACCEPTANCE: PASS
+T20 HOSTED COMPLETED SERIAL/WARRANTY DEMO: PASS
+T20 LOCKED MIGRATION REGRESSION: PASS (#1-#40 hosted hashes locked)
+T20 PAYMENT/WORKFLOW DATABASE CONTRACT: PASS
+T20 ACTION ERROR PLACEMENT CHECK: PASS
+T20 WORKFLOW GUIDANCE UI CHECK: PASS
+T20 AUTOMATED DEMO SOURCE/BUILD GATE: PASS
+T20 PC ACCEPTANCE REQUIRED: NO
+
+Persistent fictional scan fixture:
+serial: DEMO-T20-SN-001
+sale: SO-260909-0001
+warranty: WAR-260909-0001
+status: ACTIVE
+eligible_for_claim: true
+
+Demo Admin RBAC: all application permissions
+Anonymous table/private-function writes: denied
+
+GitHub PR: https://github.com/HAANHBS/HomeTechVN-Demo/pull/1
+Source merge: 09cabc831e7a2fb45fa03b5aa7ff8dab4f951a1c
+Sites version: 4
+Sites deployment: succeeded
+Production URL: https://hometechvn-demo.maytinhhaanhbs.chatgpt.site

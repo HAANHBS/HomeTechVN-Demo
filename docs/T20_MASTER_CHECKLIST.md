@@ -55,8 +55,8 @@ Scope: dedicated hosted demo with fictional data only
 - [x] TypeScript/Vite/PWA build passes.
 - [x] Production bundle contains no sourcemap or local demo account/password.
 - [x] Worker syntax check passes.
-- [ ] Sites production deployment completed.
-- [ ] Production deployment status is `succeeded`.
+- [x] Sites production deployment version 4 completed.
+- [x] Production deployment status is `succeeded`.
 
 ## Automated final acceptance
 
@@ -64,4 +64,4 @@ Scope: dedicated hosted demo with fictional data only
 - [x] Run persistent fictional operational fixture and scanner smoke test.
 - [x] Run `npm run t20:demo-gate` with exit code 0.
 - [x] Confirm `T20 PC ACCEPTANCE REQUIRED: NO`.
-- [ ] Push the exact accepted source to GitHub and deploy that commit.
+- [x] Push the exact accepted source to GitHub and deploy that commit.

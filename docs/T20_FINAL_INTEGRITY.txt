@@ -1,0 +1,36 @@
+HomeTechVN T20.2 final integrity manifest
+Created: 2026-09-10 UTC
+Status: COMPLETE & LOCKED
+Hosted migration count: 40
+Next migration: #41
+
+36ee28782e869769e05e8fe3ed2240184e724885f18d718e53d234cc4b21c721  supabase/migrations/20260904154351_t20_private_cost_rls_hardening.sql
+d23f2a90b5050f04d34d112ab4d10c9d7b4500aed187bb0a11a380c6c2ae2847  supabase/migrations/20260909052415_t20_operational_logic_integrity.sql
+49cd60a5bd9c7db5569d2d36c7143168d191854338b98c71b93fab70d78162b0  supabase/migrations/20260909053211_t20_rpc_surface_and_qr_index_hardening.sql
+
+902434e0b422ae8b3bd711317fdcc81263c97b60349c8b5dcb22850b393916a0  supabase/tests/t20_demo_acceptance.sql
+f1b5c4ee6d68e92bf0a9bb1709bdd0ab6159de43ea3436fba9506636a287b56f  supabase/t20_hosted_demo_operational_upgrade.sql
+1a32cab39b539ab9159a2c695ff70b3db2d5206c68dab90ce6acd809dce6da91  scripts/t20-source-check.mjs
+44eea9e3d38e19034f32f8d915b89c1800e7616f7617c46e625c58e8da81ae11  scripts/t20-logic-check.mjs
+e173ea1f0286ac09bb5c262b31d127fb167d6aba61d5fa87f8f49ffb55eff633  scripts/t20-demo-gate.mjs
+
+3413ef20c6135bb7346fb50d253bec03d71509694d56e360e070d7e8cf595b93  app/src/features/warranty/WarrantyPage.tsx
+36e727e2fc81bb570a6c5a39632d744cce45d759d66c3370ccf8242de5e55378  app/src/features/sales/forms.tsx
+0c7fd10bb8f3701979298c18eff6e030435a453dac5df6e2bf32336c72750b44  app/src/features/sales/SalesPage.tsx
+7906ace973166eb79f51d064bddb450cb062c72b0be5e7fb882086b6291307c3  app/src/features/repair/RepairPage.tsx
+3cd445b36c0649bedf78e3b8cad816aa7e04888335ce6e36d31f0b6f2a528ad1  app/src/lib/database.types.ts
+
+fa304ba25dc7514ad80ac361657a950ad60fef4909feda9dbea3573b07774501  package-lock.json
+55c933e8790ec1a7519361d2f9c8e219a6586cbc61a13434d3234bf60cae5e44  app/package-lock.json
+2a440df79c6ca7694bc14d8d1c2035c0bd8ccd19b239c2846f42a2551903215b  worker/package-lock.json
+
+GitHub source merge:
+09cabc831e7a2fb45fa03b5aa7ff8dab4f951a1c
+
+Sites source commit:
+52b016b12488c4b1756d2f40dcbbc844fa9f36a4
+
+Sites deployment:
+version 4
+status succeeded
+https://hometechvn-demo.maytinhhaanhbs.chatgpt.site
