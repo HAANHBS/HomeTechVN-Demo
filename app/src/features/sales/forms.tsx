@@ -7,6 +7,7 @@ import type {
   SalesOrderRow,
 } from '../../lib/database.types'
 import { supabase } from '../../lib/supabase'
+import { CustomerQuickPicker } from '../crm/forms'
 
 function parseNumber(value: string) {
   const n = Number(value)
@@ -29,10 +30,12 @@ function Actions({ busy, onCancel, label }: { busy: boolean; onCancel: () => voi
 
 export function CreateOrderForm({
   customers,
+  canCreateCustomer,
   onCancel,
   onCreated,
 }: {
   customers: CustomerRow[]
+  canCreateCustomer: boolean
   onCancel: () => void
   onCreated: (orderId: string) => void
 }) {
@@ -43,7 +46,10 @@ export function CreateOrderForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    if (!customerId) return
+    if (!customerId) {
+      setError('Hãy chọn hoặc thêm nhanh khách hàng trước khi tạo đơn.')
+      return
+    }
     setBusy(true); setError(null)
     try {
       const { data, error: rpcError } = await supabase.rpc('sale_create', {
@@ -60,11 +66,7 @@ export function CreateOrderForm({
   }
 
   return <form className="space-y-4" onSubmit={submit}>
-    <label className="block text-sm font-medium">Khách hàng
-      <select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={customerId} onChange={(e) => setCustomerId(e.target.value)} required>
-        {customers.map((c) => <option key={c.id} value={c.id}>{c.customer_code} · {c.full_name} · {c.phone || '—'}</option>)}
-      </select>
-    </label>
+    <CustomerQuickPicker customers={customers} value={customerId} onChange={setCustomerId} canCreate={canCreateCustomer} />
     <label className="block text-sm font-medium">Ghi chú
       <textarea className="mt-2 min-h-24 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} />
     </label>

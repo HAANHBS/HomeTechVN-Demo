@@ -9,7 +9,7 @@ import type {
 } from '../../lib/database.types'
 import { hasPermission, type AppUserContext } from '../../lib/permissions'
 import { supabase } from '../../lib/supabase'
-import { Modal } from '../crm/forms'
+import { CustomerDeviceQuickPicker, Modal } from '../crm/forms'
 import type { QrAction, QrResolved } from '../qr/QrCommandCenter'
 
 type Tab = 'schedules' | 'services' | 'licenses' | 'software'
@@ -153,12 +153,16 @@ function ScheduleForm({
   services,
   customers,
   devices,
+  canCreateCustomer,
+  canCreateDevice,
   onCancel,
   onDone,
 }: {
   services: ServiceRow[]
   customers: CustomerRow[]
   devices: DeviceRow[]
+  canCreateCustomer: boolean
+  canCreateDevice: boolean
   onCancel: () => void
   onDone: () => void
 }) {
@@ -167,7 +171,6 @@ function ScheduleForm({
   const [customerId, setCustomerId] = useState(customers[0]?.id ?? '')
   const [deviceId, setDeviceId] = useState('')
   const service = useMemo(() => activeServices.find((x) => x.id === serviceId), [activeServices, serviceId])
-  const customerDevices = useMemo(() => devices.filter((d) => d.customer_id === customerId && d.status === 'ACTIVE'), [devices, customerId])
   const [startDate, setStartDate] = useState(todayIso())
   const [nextDue, setNextDue] = useState(todayIso())
   const [endDate, setEndDate] = useState('')
@@ -184,10 +187,6 @@ function ScheduleForm({
     setUnit(service.default_interval_unit)
     setPrice(String(service.default_price))
   }, [service?.id])
-
-  useEffect(() => {
-    if (!customerDevices.some((d) => d.id === deviceId)) setDeviceId('')
-  }, [customerId, customerDevices, deviceId])
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -221,17 +220,7 @@ function ScheduleForm({
         {activeServices.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
       </select>
     </label>
-    <label className="block text-sm font-medium">Khách hàng
-      <select required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
-        {customers.map((c) => <option key={c.id} value={c.id}>{c.customer_code} · {c.full_name}</option>)}
-      </select>
-    </label>
-    <label className="block text-sm font-medium">Thiết bị (tùy chọn)
-      <select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={deviceId} onChange={(e) => setDeviceId(e.target.value)}>
-        <option value="">— Không gắn thiết bị —</option>
-        {customerDevices.map((d) => <option key={d.id} value={d.id}>{d.device_code} · {d.device_type} {d.brand ?? ''} {d.model ?? ''}</option>)}
-      </select>
-    </label>
+    <CustomerDeviceQuickPicker customers={customers} devices={devices} customerId={customerId} deviceId={deviceId} onCustomerChange={setCustomerId} onDeviceChange={setDeviceId} canCreateCustomer={canCreateCustomer} canCreateDevice={canCreateDevice} />
     <div className="grid gap-4 sm:grid-cols-3">
       <label className="text-sm font-medium">Ngày bắt đầu<input required type="date" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
       <label className="text-sm font-medium">Lần đến hạn đầu<input required type="date" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={nextDue} onChange={(e) => setNextDue(e.target.value)} /></label>
@@ -331,12 +320,16 @@ function LicenseForm({
   products,
   customers,
   devices,
+  canCreateCustomer,
+  canCreateDevice,
   onCancel,
   onDone,
 }: {
   products: SoftwareProductRow[]
   customers: CustomerRow[]
   devices: DeviceRow[]
+  canCreateCustomer: boolean
+  canCreateDevice: boolean
   onCancel: () => void
   onDone: () => void
 }) {
@@ -344,7 +337,6 @@ function LicenseForm({
   const [productId, setProductId] = useState(activeProducts[0]?.id ?? '')
   const [customerId, setCustomerId] = useState(customers[0]?.id ?? '')
   const [deviceId, setDeviceId] = useState('')
-  const customerDevices = useMemo(() => devices.filter((d) => d.customer_id === customerId && d.status === 'ACTIVE'), [devices, customerId])
   const [startDate, setStartDate] = useState(todayIso())
   const [endDate, setEndDate] = useState('')
   const [seats, setSeats] = useState('1')
@@ -385,8 +377,7 @@ function LicenseForm({
 
   return <form className="space-y-4" onSubmit={submit}>
     <label className="block text-sm font-medium">Sản phẩm phần mềm<select required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={productId} onChange={(e) => setProductId(e.target.value)}>{activeProducts.map((p) => <option key={p.id} value={p.id}>{p.vendor ? `${p.vendor} · ` : ''}{p.name} {p.edition ?? ''}</option>)}</select></label>
-    <label className="block text-sm font-medium">Khách hàng<select required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>{customers.map((c) => <option key={c.id} value={c.id}>{c.customer_code} · {c.full_name}</option>)}</select></label>
-    <label className="block text-sm font-medium">Thiết bị<select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={deviceId} onChange={(e) => setDeviceId(e.target.value)}><option value="">— Không gắn thiết bị —</option>{customerDevices.map((d) => <option key={d.id} value={d.id}>{d.device_code} · {d.device_type} {d.brand ?? ''} {d.model ?? ''}</option>)}</select></label>
+    <CustomerDeviceQuickPicker customers={customers} devices={devices} customerId={customerId} deviceId={deviceId} onCustomerChange={setCustomerId} onDeviceChange={setDeviceId} canCreateCustomer={canCreateCustomer} canCreateDevice={canCreateDevice} />
     <div className="grid gap-4 sm:grid-cols-3">
       <label className="text-sm font-medium">Bắt đầu<input required type="date" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
       <label className="text-sm font-medium">Kết thúc<input type="date" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></label>
@@ -732,11 +723,11 @@ export function ServiceLicensePage({
 
     {showService ? <Modal title="Tạo dịch vụ" onClose={() => setShowService(false)}><ServiceForm onCancel={() => setShowService(false)} onDone={() => { setShowService(false); void load() }} /></Modal> : null}
     {editingService ? <Modal title="Sửa dịch vụ" onClose={() => setEditingService(null)}><ServiceForm initial={editingService} onCancel={() => setEditingService(null)} onDone={() => { setEditingService(null); void load() }} /></Modal> : null}
-    {showSchedule ? <Modal title="Tạo lịch dịch vụ" onClose={() => setShowSchedule(false)}><ScheduleForm services={services} customers={customers} devices={devices} onCancel={() => setShowSchedule(false)} onDone={() => { setShowSchedule(false); void load() }} /></Modal> : null}
+    {showSchedule ? <Modal title="Tạo lịch dịch vụ" onClose={() => setShowSchedule(false)}><ScheduleForm services={services} customers={customers} devices={devices} canCreateCustomer={hasPermission(context, 'customer.create')} canCreateDevice={hasPermission(context, 'device.create')} onCancel={() => setShowSchedule(false)} onDone={() => { setShowSchedule(false); void load() }} /></Modal> : null}
     {editingSchedule ? <Modal title="Sửa lịch dịch vụ" onClose={() => setEditingSchedule(null)}><ScheduleEditForm row={editingSchedule} onCancel={() => setEditingSchedule(null)} onDone={() => { setEditingSchedule(null); void load() }} /></Modal> : null}
     {showProduct ? <Modal title="Tạo sản phẩm phần mềm" onClose={() => setShowProduct(false)}><SoftwareProductForm onCancel={() => setShowProduct(false)} onDone={() => { setShowProduct(false); void load() }} /></Modal> : null}
     {editingProduct ? <Modal title="Sửa sản phẩm phần mềm" onClose={() => setEditingProduct(null)}><SoftwareProductForm initial={editingProduct} onCancel={() => setEditingProduct(null)} onDone={() => { setEditingProduct(null); void load() }} /></Modal> : null}
-    {showLicense ? <Modal title="Tạo License" onClose={() => setShowLicense(false)}><LicenseForm products={products} customers={customers} devices={devices} onCancel={() => setShowLicense(false)} onDone={() => { setShowLicense(false); void load() }} /></Modal> : null}
+    {showLicense ? <Modal title="Tạo License" onClose={() => setShowLicense(false)}><LicenseForm products={products} customers={customers} devices={devices} canCreateCustomer={hasPermission(context, 'customer.create')} canCreateDevice={hasPermission(context, 'device.create')} onCancel={() => setShowLicense(false)} onDone={() => { setShowLicense(false); void load() }} /></Modal> : null}
     {editingLicense ? <Modal title="Sửa License" onClose={() => setEditingLicense(null)}><LicenseEditForm row={editingLicense} onCancel={() => setEditingLicense(null)} onDone={() => { setEditingLicense(null); void load() }} /></Modal> : null}
   </main>
 }

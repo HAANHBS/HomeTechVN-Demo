@@ -1,14 +1,20 @@
-# HomeTechVN Management — T20.2 Operational Logic
+# HomeTechVN Management — T21.1 Shared Intake
 
-Current release: `0.20.2-t20.2`. Migrations #1–#40 are deployed and locked.
+Current release: `0.21.1-t21.1`. Migrations #1–#40 are deployed and locked;
+T21.1 is UI-only, so migration #41 remains free for T22.
 Payment totals, ledger reconciliation, workflow prerequisites, automatic sale
 warranty and authenticated serial/QR warranty scanning are accepted against
 hosted fictional data. Demo Admin receives all application RBAC permissions;
 anonymous/database-private access remains closed.
 
+Sales, repair intake, service schedules and software licenses now share a
+searchable customer/device picker. Authorized staff can create the missing
+customer or device inside the business form and the new record is selected
+automatically, without losing the form in progress.
+
 From T20.2 onward acceptance is automated on the hosted fake-data project. PC or
-Windows acceptance is not required. See `docs/T20_STATUS.md` and
-`docs/T20_RUNBOOK.md`.
+Windows acceptance is not required. See `docs/T21_1_SHARED_INTAKE.md`,
+`docs/T21_ROADMAP.md`, `docs/T20_STATUS.md` and `docs/T20_RUNBOOK.md`.
 
 ---
 
