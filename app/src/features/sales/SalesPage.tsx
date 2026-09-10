@@ -119,7 +119,7 @@ function OrderList({
       {!loading && filtered.length === 0 ? <p className="p-8 text-center text-slate-500">Chưa có đơn phù hợp.</p> : null}
     </section>
     <ErrorPanel message={error} />
-    {showCreate ? <Modal title="Tạo đơn bán" onClose={() => setShowCreate(false)}><CreateOrderForm customers={customers} onCancel={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); onOpen(id) }} /></Modal> : null}
+    {showCreate ? <Modal title="Tạo đơn bán" onClose={() => setShowCreate(false)}><CreateOrderForm customers={customers} canCreateCustomer={hasPermission(context, 'customer.create')} onCancel={() => setShowCreate(false)} onCreated={(id) => { setShowCreate(false); onOpen(id) }} /></Modal> : null}
   </div>
 }
 

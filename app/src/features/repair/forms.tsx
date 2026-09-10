@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState, type FormEvent } from 'react'
 import type { CustomerRow, DeviceRow, InventoryUnitRow, ProductInventorySummaryRow, RepairOrderRow } from '../../lib/database.types'
 import { supabase } from '../../lib/supabase'
+import { CustomerDeviceQuickPicker } from '../crm/forms'
 
 const inputClass = 'mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none focus:border-cyan-500'
 const labelClass = 'block text-sm font-medium text-slate-300'
@@ -16,9 +17,8 @@ function Actions({ busy, onCancel, label }: { busy: boolean; onCancel: () => voi
   return <div className="flex justify-end gap-2 pt-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Đóng</button><button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang xử lý…' : label}</button></div>
 }
 
-export function CreateRepairForm({ customers, devices, onCancel, onCreated }: { customers: CustomerRow[]; devices: DeviceRow[]; onCancel: () => void; onCreated: (id: string) => void }) {
+export function CreateRepairForm({ customers, devices, canCreateCustomer, canCreateDevice, onCancel, onCreated }: { customers: CustomerRow[]; devices: DeviceRow[]; canCreateCustomer: boolean; canCreateDevice: boolean; onCancel: () => void; onCreated: (id: string) => void }) {
   const [customerId,setCustomerId]=useState(customers[0]?.id ?? '')
-  const customerDevices=useMemo(()=>devices.filter(d=>d.customer_id===customerId && d.status==='ACTIVE'),[customerId,devices])
   const [deviceId,setDeviceId]=useState('')
   const [issue,setIssue]=useState('')
   const [condition,setCondition]=useState('')
@@ -27,12 +27,10 @@ export function CreateRepairForm({ customers, devices, onCancel, onCreated }: { 
   const [priority,setPriority]=useState('NORMAL')
   const [note,setNote]=useState('')
   const [busy,setBusy]=useState(false); const [error,setError]=useState<string|null>(null)
-  useEffect(()=>{ if (!customerDevices.some(d=>d.id===deviceId)) setDeviceId(customerDevices[0]?.id ?? '') },[customerDevices,deviceId])
-  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError(null);try{if(!deviceId)throw new Error('Khách hàng chưa có thiết bị ACTIVE.');const {data,error:rpcError}=await supabase.rpc('repair_create',{p_customer_id:customerId,p_customer_device_id:deviceId,p_reported_issue:issue.trim(),p_intake_condition:condition.trim()||undefined,p_accessories_received:accessories.split(/[,\n]/).map(x=>x.trim()).filter(Boolean),p_customer_request:request.trim()||undefined,p_priority:priority,p_intake_note:note.trim()||undefined});if(rpcError)throw rpcError;const id=typeof data==='object'&&data&&!Array.isArray(data)?String((data as Record<string,unknown>).id??''):'';if(!id)throw new Error('RPC không trả repair id.');onCreated(id)}catch(err){setError(err instanceof Error?err.message:'Không tạo được phiếu sửa chữa.')}finally{setBusy(false)}}
+  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError(null);try{if(!customerId)throw new Error('Hãy chọn hoặc thêm nhanh khách hàng.');if(!deviceId)throw new Error('Hãy chọn hoặc thêm nhanh thiết bị trước khi tiếp nhận.');const {data,error:rpcError}=await supabase.rpc('repair_create',{p_customer_id:customerId,p_customer_device_id:deviceId,p_reported_issue:issue.trim(),p_intake_condition:condition.trim()||undefined,p_accessories_received:accessories.split(/[,\n]/).map(x=>x.trim()).filter(Boolean),p_customer_request:request.trim()||undefined,p_priority:priority,p_intake_note:note.trim()||undefined});if(rpcError)throw rpcError;const id=typeof data==='object'&&data&&!Array.isArray(data)?String((data as Record<string,unknown>).id??''):'';if(!id)throw new Error('RPC không trả repair id.');onCreated(id)}catch(err){setError(err instanceof Error?err.message:'Không tạo được phiếu sửa chữa.')}finally{setBusy(false)}}
   return <form className="space-y-4" onSubmit={submit}>
+    <CustomerDeviceQuickPicker customers={customers} devices={devices} customerId={customerId} deviceId={deviceId} onCustomerChange={setCustomerId} onDeviceChange={setDeviceId} canCreateCustomer={canCreateCustomer} canCreateDevice={canCreateDevice} deviceRequired />
     <div className="grid gap-4 md:grid-cols-2">
-      <label className={labelClass}>Khách hàng<select className={inputClass} value={customerId} onChange={e=>setCustomerId(e.target.value)}>{customers.map(c=><option key={c.id} value={c.id}>{c.customer_code} · {c.full_name}</option>)}</select></label>
-      <label className={labelClass}>Thiết bị<select className={inputClass} required value={deviceId} onChange={e=>setDeviceId(e.target.value)}><option value="">-- Chọn thiết bị --</option>{customerDevices.map(d=><option key={d.id} value={d.id}>{d.device_code} · {d.device_type} · {[d.brand,d.model].filter(Boolean).join(' ')}</option>)}</select></label>
       <label className={labelClass}>Ưu tiên<select className={inputClass} value={priority} onChange={e=>setPriority(e.target.value)}><option value="NORMAL">NORMAL</option><option value="HIGH">HIGH</option><option value="URGENT">URGENT</option></select></label>
       <label className={labelClass}>Phụ kiện nhận kèm<input className={inputClass} value={accessories} onChange={e=>setAccessories(e.target.value)} placeholder="Sạc, túi, chuột…" /></label>
     </div>

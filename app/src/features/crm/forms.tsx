@@ -1,5 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import type { FormEvent, ReactNode } from 'react'
+import { createPortal } from 'react-dom'
 import { supabase } from '../../lib/supabase'
 import type {
   CustomerRow,
@@ -25,9 +26,15 @@ export function Modal({
   onClose: () => void
   children: ReactNode
 }) {
-  return (
+  const content = (
     <div className="fixed inset-0 z-50 flex items-start justify-center overflow-y-auto bg-black/70 p-4 sm:p-8">
-      <section className="w-full max-w-3xl rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
+      <section
+        role="dialog"
+        aria-modal="true"
+        aria-label={title}
+        onSubmit={(event) => event.stopPropagation()}
+        className="w-full max-w-3xl rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl"
+      >
         <header className="flex items-center justify-between border-b border-slate-800 px-5 py-4">
           <h2 className="font-semibold text-slate-100">{title}</h2>
           <button
@@ -42,6 +49,8 @@ export function Modal({
       </section>
     </div>
   )
+
+  return typeof document === 'undefined' ? content : createPortal(content, document.body)
 }
 
 export function CustomerForm({
@@ -385,4 +394,235 @@ export function NoteForm({
       {error ? <p role="alert" aria-live="assertive" className="rounded-xl bg-red-950/50 px-3 py-2 text-sm text-red-200">{error}</p> : null}
     </form>
   )
+}
+
+const fallbackDeviceTypes = [
+  'Laptop',
+  'PC',
+  'Monitor',
+  'Printer',
+  'Camera',
+  'NVR/DVR',
+  'Router',
+  'Switch',
+  'UPS',
+  'Disk',
+  'Phone',
+  'Other',
+]
+
+function normalizeSearch(value: string) {
+  return value.trim().toLocaleLowerCase('vi-VN')
+}
+
+function customerMatches(customer: CustomerRow, query: string) {
+  if (!query) return true
+  const digits = query.replace(/\D/g, '')
+  const haystack = [
+    customer.customer_code,
+    customer.full_name,
+    customer.phone ?? '',
+    customer.phone_normalized ?? '',
+    customer.email ?? '',
+    customer.zalo ?? '',
+  ].join(' ').toLocaleLowerCase('vi-VN')
+
+  return haystack.includes(query) || (digits.length >= 3 && (customer.phone_normalized ?? '').includes(digits))
+}
+
+function deviceMatches(device: DeviceRow, query: string) {
+  if (!query) return true
+  return [device.device_code, device.device_type, device.brand ?? '', device.model ?? '', device.serial_number ?? '', device.asset_tag ?? '']
+    .join(' ')
+    .toLocaleLowerCase('vi-VN')
+    .includes(query)
+}
+
+function withSelectedFirst<T extends { id: string }>(rows: T[], selected: T | undefined) {
+  if (!selected || rows.some((row) => row.id === selected.id)) return rows
+  return [selected, ...rows]
+}
+
+export function CustomerQuickPicker({
+  customers,
+  value,
+  onChange,
+  canCreate = false,
+  required = true,
+  label = 'Khách hàng',
+}: {
+  customers: CustomerRow[]
+  value: string
+  onChange: (customerId: string) => void
+  canCreate?: boolean
+  required?: boolean
+  label?: string
+}) {
+  const [rows, setRows] = useState(customers)
+  const [search, setSearch] = useState('')
+  const [showCreate, setShowCreate] = useState(false)
+
+  useEffect(() => {
+    setRows((current) => {
+      const merged = new Map(current.map((row) => [row.id, row]))
+      customers.forEach((row) => merged.set(row.id, row))
+      return [...merged.values()]
+    })
+  }, [customers])
+
+  const query = normalizeSearch(search)
+  const selected = rows.find((row) => row.id === value)
+  const matches = withSelectedFirst(rows.filter((row) => row.status === 'ACTIVE' && customerMatches(row, query)), selected)
+
+  return <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
+    <div className="flex flex-wrap items-center justify-between gap-2">
+      <span className="text-sm font-semibold text-slate-200">{label}{required ? ' *' : ''}</span>
+      {canCreate ? <button type="button" onClick={() => setShowCreate(true)} className="rounded-lg border border-cyan-800 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-950/40">+ Thêm khách hàng mới</button> : null}
+    </div>
+    <input
+      type="search"
+      aria-label={`Tìm ${label.toLocaleLowerCase('vi-VN')}`}
+      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-cyan-500"
+      placeholder="Tìm tên, mã khách, điện thoại, Zalo hoặc email…"
+      value={search}
+      onChange={(event) => setSearch(event.target.value)}
+    />
+    <select
+      aria-label={`Chọn ${label.toLocaleLowerCase('vi-VN')}`}
+      required={required}
+      className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm"
+      value={value}
+      onChange={(event) => onChange(event.target.value)}
+    >
+      <option value="">— Chọn khách hàng —</option>
+      {matches.map((customer) => <option key={customer.id} value={customer.id}>{customer.customer_code} · {customer.full_name} · {customer.phone || customer.zalo || 'chưa có liên hệ'}</option>)}
+    </select>
+    {query && matches.length === 0 ? <p className="text-xs text-amber-300">Không tìm thấy khách phù hợp. Có thể tạo ngay mà không rời biểu mẫu.</p> : null}
+
+    {showCreate ? <Modal title="Thêm nhanh khách hàng" onClose={() => setShowCreate(false)}>
+      <CustomerForm
+        onCancel={() => setShowCreate(false)}
+        onSaved={(customer) => {
+          setRows((current) => [customer, ...current.filter((row) => row.id !== customer.id)])
+          onChange(customer.id)
+          setSearch('')
+          setShowCreate(false)
+        }}
+      />
+    </Modal> : null}
+  </div>
+}
+
+export function CustomerDeviceQuickPicker({
+  customers,
+  devices,
+  customerId,
+  deviceId,
+  onCustomerChange,
+  onDeviceChange,
+  canCreateCustomer = false,
+  canCreateDevice = false,
+  deviceRequired = false,
+}: {
+  customers: CustomerRow[]
+  devices: DeviceRow[]
+  customerId: string
+  deviceId: string
+  onCustomerChange: (customerId: string) => void
+  onDeviceChange: (deviceId: string) => void
+  canCreateCustomer?: boolean
+  canCreateDevice?: boolean
+  deviceRequired?: boolean
+}) {
+  const [localDevices, setLocalDevices] = useState(devices)
+  const [deviceSearch, setDeviceSearch] = useState('')
+  const [showCreateDevice, setShowCreateDevice] = useState(false)
+  const [deviceTypes, setDeviceTypes] = useState(fallbackDeviceTypes)
+
+  useEffect(() => {
+    setLocalDevices((current) => {
+      const merged = new Map(current.map((row) => [row.id, row]))
+      devices.forEach((row) => merged.set(row.id, row))
+      return [...merged.values()]
+    })
+  }, [devices])
+
+  useEffect(() => {
+    const selectedDevice = localDevices.find((device) => device.id === deviceId)
+    if (selectedDevice && selectedDevice.customer_id !== customerId) onDeviceChange('')
+  }, [customerId, deviceId, localDevices, onDeviceChange])
+
+  useEffect(() => {
+    if (!canCreateDevice) return
+    let cancelled = false
+    void supabase.from('settings').select('value').eq('key', 'crm.device_types').maybeSingle().then(({ data, error }) => {
+      if (cancelled || error || !Array.isArray(data?.value)) return
+      const values = data.value.filter((item): item is string => typeof item === 'string' && item.trim().length > 0)
+      if (values.length > 0) setDeviceTypes(values)
+    })
+    return () => { cancelled = true }
+  }, [canCreateDevice])
+
+  const query = normalizeSearch(deviceSearch)
+  const selected = localDevices.find((row) => row.id === deviceId && row.customer_id === customerId)
+  const customerDevices = withSelectedFirst(
+    localDevices.filter((row) => row.customer_id === customerId && row.status === 'ACTIVE' && deviceMatches(row, query)),
+    selected,
+  )
+
+  return <div className="space-y-3">
+    <CustomerQuickPicker
+      customers={customers}
+      value={customerId}
+      onChange={(nextCustomerId) => {
+        onCustomerChange(nextCustomerId)
+        onDeviceChange('')
+        setDeviceSearch('')
+      }}
+      canCreate={canCreateCustomer}
+    />
+
+    <div className="space-y-2 rounded-2xl border border-slate-800 bg-slate-950/40 p-3">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <span className="text-sm font-semibold text-slate-200">Thiết bị{deviceRequired ? ' *' : ' (tùy chọn)'}</span>
+        {canCreateDevice && customerId ? <button type="button" onClick={() => setShowCreateDevice(true)} className="rounded-lg border border-cyan-800 px-3 py-1.5 text-xs font-semibold text-cyan-300 hover:bg-cyan-950/40">+ Thêm thiết bị mới</button> : null}
+      </div>
+      <input
+        type="search"
+        aria-label="Tìm thiết bị của khách hàng"
+        disabled={!customerId}
+        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm outline-none focus:border-cyan-500 disabled:opacity-50"
+        placeholder="Tìm mã thiết bị, serial, hãng, model…"
+        value={deviceSearch}
+        onChange={(event) => setDeviceSearch(event.target.value)}
+      />
+      <select
+        aria-label="Chọn thiết bị"
+        required={deviceRequired}
+        disabled={!customerId}
+        className="w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm disabled:opacity-50"
+        value={deviceId}
+        onChange={(event) => onDeviceChange(event.target.value)}
+      >
+        <option value="">{deviceRequired ? '— Chọn thiết bị —' : '— Không gắn thiết bị —'}</option>
+        {customerDevices.map((device) => <option key={device.id} value={device.id}>{device.device_code} · {device.device_type} · {[device.brand, device.model, device.serial_number].filter(Boolean).join(' · ') || 'chưa có model/serial'}</option>)}
+      </select>
+      {customerId && query && customerDevices.length === 0 ? <p className="text-xs text-amber-300">Không tìm thấy thiết bị phù hợp của khách này.</p> : null}
+      {customerId && !query && localDevices.every((device) => device.customer_id !== customerId || device.status !== 'ACTIVE') ? <p className="text-xs text-amber-300">Khách hàng chưa có thiết bị đang sử dụng. Hãy thêm thiết bị trước khi tiếp tục.</p> : null}
+
+      {showCreateDevice && customerId ? <Modal title="Thêm nhanh thiết bị" onClose={() => setShowCreateDevice(false)}>
+        <DeviceForm
+          customerId={customerId}
+          deviceTypes={deviceTypes}
+          onCancel={() => setShowCreateDevice(false)}
+          onSaved={(device) => {
+            setLocalDevices((current) => [device, ...current.filter((row) => row.id !== device.id)])
+            onDeviceChange(device.id)
+            setDeviceSearch('')
+            setShowCreateDevice(false)
+          }}
+        />
+      </Modal> : null}
+    </div>
+  </div>
 }
