@@ -1,0 +1,22 @@
+# T10 Account / Config Register
+
+- Environment: DEV
+- Supabase project: HomeTechVN
+- Project ref: `puqvbenyenwemfbsqpfd`
+- Region: Singapore (`ap-southeast-1`)
+- Implementation date: 30/08/2026
+- Responsible person: HomeTechVN project owner
+- Frontend environment: existing Windows `app/.env.local` retained
+- Browser credential: existing Supabase publishable key only
+- Worker platform: Cloudflare Workers / Cron
+- Worker name: `hometechvn-notification-worker`
+- Worker cron candidate: every 5 minutes, UTC
+- Wrangler pin: `4.127.1`
+- Supabase Worker authorization: `SUPABASE_SERVICE_ROLE_KEY` as Worker secret only
+- Telegram token storage: Worker secret `TELEGRAM_BOT_TOKEN`
+- Email key storage: Worker secret `EMAIL_API_KEY`
+- Zalo token storage: Worker secret `ZALO_ACCESS_TOKEN`
+- Database stores only `env://...` secret references
+- Remote T10 database/outbox test: PASS
+- Windows T10 acceptance: PASS
+- Live external-provider send: EXTERNAL-CREDENTIAL LIMITATION — database/outbox/Worker contract PASS; no fake live-send PASS without Telegram/Email/Zalo provider credentials

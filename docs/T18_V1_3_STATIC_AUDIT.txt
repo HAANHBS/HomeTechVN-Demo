@@ -1,0 +1,16 @@
+HomeTechVN T18 v1.3 candidate static audit
+Audit date: 2026-09-04
+
+T17 FINAL integrity manifest hash: PASS
+Locked migrations #1-#36: PASS
+T18 migrations: 0
+Next migration: #37
+PowerShell required-entry strings: 5/5 exact
+PowerShell comma-expression regression: absent
+One-entry-per-iteration construction: PASS
+T18 package policy self-test: PASS
+T18 source check: PASS
+T18 PowerShell global static check: PASS
+Global comma-terminated concatenation guard: PASS (32/32 scripts)
+
+Windows PowerShell release ZIP creation remains the runtime acceptance gate.

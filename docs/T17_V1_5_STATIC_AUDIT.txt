@@ -1,0 +1,38 @@
+HomeTechVN T17 v1.5 - Global Reliability Audit
+Date: 2026-09-01
+
+STATIC / SOURCE
+T17 LOCAL CONFIG RESOLVER SELF TEST: PASS
+T17 POWERSHELL GLOBAL STATIC CHECK: PASS (30 files)
+- every .ps1 UTF-8 BOM
+- every .ps1 ASCII source
+- quote/bracket/here-string lexical balance
+- literal TAB prohibited
+- line-leading pipeline prohibited
+T17 DEMO SOURCE CHECK: PASS
+T11 RESPONSIVE UI CHECK: PASS
+T12 RESPONSIVE PUBLIC UI CHECK: PASS
+T13 RESPONSIVE UI CHECK: PASS
+T14 PWA SOURCE CHECK: PASS
+T17 TYPESCRIPT AST CHECK: PASS (28 files, 0 parse errors)
+Worker JS syntax: PASS
+T17 migration hash lock: PASS (36/36 vs T16 FINAL)
+T17 DB migration: 0
+Secret scan: PASS
+
+REAL CONNECTED SUPABASE VALIDATION
+RPC signatures used by T17: PASS
+Role/permission map (Admin/Manager/Sales/Technician/Cashier): PASS
+Sales -> Payment -> Checklist -> Completed -> Sale Warranty: PASS (ROLLBACK)
+Repair -> Part Issue -> QC -> Completed -> Repair Warranty: PASS (ROLLBACK)
+Service Schedule + Software License -> Reminder -> IN_APP Notification: PASS (ROLLBACK)
+Dashboard snapshot: PASS
+Report snapshot: PASS
+Security/Audit snapshot: PASS
+Remote test residue: 0 users / 0 customers / 0 orders / 0 repairs / 0 products
+Security Advisor: only Leaked Password Protection warning (known Free-plan limitation)
+Performance Advisor: unused-index INFO only
+
+WINDOWS RUNTIME STILL REQUIRED
+npm run t17:verify
+T17 is not FINAL until the Windows verifier passes all final markers.

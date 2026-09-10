@@ -1,0 +1,233 @@
+import fs from 'node:fs'
+import path from 'node:path'
+import { spawnSync } from 'node:child_process'
+import { fileURLToPath, pathToFileURL } from 'node:url'
+
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
+const projectRoot = path.resolve(__dirname, '..')
+
+export const expectedMigrations = [
+  '20260829143948_t1_core_foundation.sql',
+  '20260829144121_t1_security_hardening.sql',
+  '20260829150727_t1_private_security_and_rls_performance.sql',
+]
+
+export const legacyMigrations = [
+  '20260828150000_t1_core.sql',
+]
+
+function stamp() {
+  const d = new Date()
+  const pad = (n) => String(n).padStart(2, '0')
+  return `${d.getFullYear()}${pad(d.getMonth() + 1)}${pad(d.getDate())}_${pad(d.getHours())}${pad(d.getMinutes())}${pad(d.getSeconds())}`
+}
+
+function commandName(base) {
+  return process.platform === 'win32' && base === 'npx' ? 'npx.cmd' : base
+}
+
+function run(command, args, options = {}) {
+  const capture = Boolean(options.capture)
+  const allowFailure = Boolean(options.allowFailure)
+
+  console.log(`\n> ${command} ${args.join(' ')}`)
+
+  const result = spawnSync(commandName(command), args, {
+    cwd: projectRoot,
+    encoding: 'utf8',
+    stdio: capture ? ['pipe', 'pipe', 'pipe'] : 'inherit',
+    input: options.input,
+    windowsHide: false,
+  })
+
+  if (result.error) {
+    if (allowFailure) {
+      console.warn(`[WARN] ${result.error.message}`)
+      return result
+    }
+    throw result.error
+  }
+
+  if (capture) {
+    if (result.stdout) process.stdout.write(result.stdout)
+    if (result.stderr) process.stderr.write(result.stderr)
+  }
+
+  if (result.status !== 0 && !allowFailure) {
+    throw new Error(`Command failed (${result.status}): ${command} ${args.join(' ')}`)
+  }
+
+  return result
+}
+
+export function repairMigrations(rootDir, options = {}) {
+  const migrationsDir = path.join(rootDir, 'supabase', 'migrations')
+  if (!fs.existsSync(migrationsDir)) {
+    throw new Error(`Không tìm thấy thư mục migrations: ${migrationsDir}`)
+  }
+
+  const backupRoot = options.backupRoot ?? path.join(rootDir, 'docs', 'legacy_migrations_backup')
+  const moved = []
+
+  for (const file of legacyMigrations) {
+    const source = path.join(migrationsDir, file)
+    if (!fs.existsSync(source)) continue
+
+    const backupDir = path.join(backupRoot, stamp())
+    fs.mkdirSync(backupDir, { recursive: true })
+    const target = path.join(backupDir, file)
+    fs.renameSync(source, target)
+    moved.push({ source, target })
+  }
+
+  const sqlFiles = fs.readdirSync(migrationsDir)
+    .filter((name) => name.toLowerCase().endsWith('.sql'))
+    .sort()
+
+  const missing = expectedMigrations.filter((name) => !sqlFiles.includes(name))
+  const unexpected = sqlFiles.filter((name) => !expectedMigrations.includes(name))
+
+  if (missing.length > 0) {
+    throw new Error(`Thiếu migration T1 bắt buộc:\n- ${missing.join('\n- ')}`)
+  }
+
+  if (unexpected.length > 0) {
+    throw new Error(
+      `Phát hiện migration SQL ngoài bộ T1 v1.7. Script DỪNG để không làm mất dữ liệu:\n- ${unexpected.join('\n- ')}`
+    )
+  }
+
+  return { moved, sqlFiles }
+}
+
+function ensureConfig() {
+  const config = path.join(projectRoot, 'supabase', 'config.toml')
+  if (fs.existsSync(config)) {
+    console.log(`[PASS] Có supabase/config.toml`)
+    return
+  }
+
+  console.log('[INFO] Chưa có supabase/config.toml -> chạy supabase init')
+  run('npx', ['supabase', 'init'])
+
+  if (!fs.existsSync(config)) {
+    throw new Error('supabase init chạy xong nhưng vẫn không thấy supabase/config.toml')
+  }
+}
+
+function readProjectId() {
+  const configPath = path.join(projectRoot, 'supabase', 'config.toml')
+  const text = fs.readFileSync(configPath, 'utf8')
+  const match = text.match(/^\s*project_id\s*=\s*["']([^"']+)["']/m)
+  if (!match) {
+    throw new Error('Không đọc được project_id trong supabase/config.toml')
+  }
+  return match[1]
+}
+
+function verifyDatabase(projectId) {
+  const container = `supabase_db_${projectId}`
+  const inspect = run('docker', ['inspect', '-f', '{{.State.Status}}', container], {
+    capture: true,
+  })
+  if (!String(inspect.stdout).trim().includes('running')) {
+    throw new Error(`Database container ${container} không ở trạng thái running`)
+  }
+
+  const verifyFile = path.join(projectRoot, 'supabase', 'tests', 't1_verify.sql')
+  if (!fs.existsSync(verifyFile)) {
+    throw new Error(`Không tìm thấy verify SQL: ${verifyFile}`)
+  }
+
+  const sql = fs.readFileSync(verifyFile, 'utf8')
+  const result = run(
+    'docker',
+    ['exec', '-i', container, 'psql', '-U', 'postgres', '-d', 'postgres', '-v', 'ON_ERROR_STOP=1'],
+    { capture: true, input: sql }
+  )
+
+  const combined = `${result.stdout ?? ''}\n${result.stderr ?? ''}`
+  if (!combined.includes('T1 FINAL CORE CHECKS: PASS')) {
+    throw new Error('Verify SQL chạy exit code 0 nhưng không tìm thấy marker PASS.')
+  }
+
+  return combined
+}
+
+function writeSnapshot(lines) {
+  const dir = path.join(projectRoot, 'docs', 'snapshots')
+  fs.mkdirSync(dir, { recursive: true })
+  const file = path.join(dir, `T1_LOCAL_VERIFY_${stamp()}.txt`)
+  fs.writeFileSync(file, lines.join('\n') + '\n', 'utf8')
+  console.log(`[PASS] Snapshot: ${file}`)
+  return file
+}
+
+async function main() {
+  console.log('=== HomeTechVN T1 v1.7 — Repair + Start + Reset + Verify ===')
+  console.log(`Project root: ${projectRoot}`)
+
+  ensureConfig()
+
+  const repaired = repairMigrations(projectRoot)
+  if (repaired.moved.length > 0) {
+    for (const item of repaired.moved) {
+      console.log(`[FIXED] Đã chuyển migration cũ:\n  FROM: ${item.source}\n  TO:   ${item.target}`)
+    }
+  } else {
+    console.log('[PASS] Không còn migration legacy đã biết.')
+  }
+
+  console.log('[PASS] Migration list chính xác:')
+  repaired.sqlFiles.forEach((x) => console.log(`  - ${x}`))
+
+  // A failed/half-created local stack can leave stale containers/volumes.
+  // This is local DEV only. Remote Supabase is NOT touched.
+  run('npx', ['supabase', 'stop', '--no-backup'], { allowFailure: true })
+
+  // Official local workflow: start first, then db reset for reproducibility.
+  run('npx', ['supabase', 'start'])
+  run('npx', ['supabase', 'db', 'reset', '--local'])
+
+  const projectId = readProjectId()
+  console.log(`[INFO] Local project_id: ${projectId}`)
+
+  const verifyOutput = verifyDatabase(projectId)
+
+  const statusResult = run('npx', ['supabase', 'status'], { capture: true })
+  const snapshot = writeSnapshot([
+    'HomeTechVN T1 local verification',
+    `Checked: ${new Date().toISOString()}`,
+    `Project root: ${projectRoot}`,
+    `project_id: ${projectId}`,
+    '',
+    'Migrations:',
+    ...repaired.sqlFiles.map((x) => `- ${x}`),
+    '',
+    'VERIFY:',
+    verifyOutput,
+    '',
+    'STATUS:',
+    String(statusResult.stdout ?? ''),
+    String(statusResult.stderr ?? ''),
+  ])
+
+  console.log('\n==========================================')
+  console.log('T1 LOCAL REPRODUCIBILITY: PASS')
+  console.log('T1 FINAL CORE CHECKS: PASS')
+  console.log(`Snapshot: ${snapshot}`)
+  console.log('==========================================')
+}
+
+const isMain =
+  process.argv[1] &&
+  import.meta.url === pathToFileURL(path.resolve(process.argv[1])).href
+
+if (isMain) {
+  main().catch((error) => {
+    console.error('\n[T1 FAIL]')
+    console.error(error instanceof Error ? error.message : error)
+    process.exitCode = 1
+  })
+}

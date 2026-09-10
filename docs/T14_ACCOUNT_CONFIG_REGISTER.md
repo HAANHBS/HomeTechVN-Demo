@@ -1,0 +1,23 @@
+# T14 Account / Config Register
+
+- Environment: DEV / pre-production candidate
+- Supabase project: HomeTechVN
+- Project ref: `puqvbenyenwemfbsqpfd`
+- Business timezone: Asia/Bangkok
+- Implementation date: 31/08/2026
+- Responsible person: HomeTechVN project owner
+- PWA library: `vite-plugin-pwa@1.3.0`
+- Service Worker strategy: Workbox `generateSW`
+- Update policy: prompt
+- Background Sync: disabled/not configured
+- Supabase runtime caching: none
+- Offline transaction writes: prohibited
+- App-shell offline UI: enabled
+- Manifest start URL: `/`
+- Manifest scope: `/`
+- Manifest display: `standalone`
+- Deployment target: Cloudflare Pages HTTPS
+- New T14 secret: none
+- Existing secret storage: unchanged
+- Database migrations added: 0
+- Windows build acceptance: PASS

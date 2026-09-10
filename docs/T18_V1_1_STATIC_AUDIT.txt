@@ -1,0 +1,30 @@
+HomeTechVN T18 v1.1 candidate static/runtime audit
+Audit date: 2026-09-03
+
+T17 FINAL integrity manifest SHA-256:
+8deddca35fefed24c1aa63f4281f3daf0c443bebf626890c5f081a3feb875300
+
+Locked migrations #1-#36: PASS
+T18 migrations: 0
+Next migration: #37
+T18 PowerShell managed files: 32/32
+T18 PowerShell lexical/BOM/ASCII/static gate: PASS
+T18 source contract: PASS
+T18 production env validator self-test: PASS
+T18 package policy self-test: PASS
+T18 Worker syntax: PASS
+T18 Worker health/unauthorized self-test: PASS
+T18 Worker cron-off self-test: PASS
+T11 responsive source check: PASS
+T12 public privacy/QR source check: PASS
+T13 reports source check: PASS
+T14 PWA source check: PASS
+T14 production PWA build check: PASS
+T18 production build demo/sourcemap exclusion: PASS
+Root/app/worker npm ci: PASS
+
+The production build used a temporary non-live publishable-key configuration.
+That temporary app/.env.local was removed before candidate packaging.
+
+Windows-only full Supabase/Docker regression and the PowerShell release packager
+remain acceptance gates. No Windows PASS is claimed by this audit.

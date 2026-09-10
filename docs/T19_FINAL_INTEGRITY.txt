@@ -1,0 +1,32 @@
+HomeTechVN T19 FINAL integrity manifest
+Acceptance date: 2026-09-04
+Validated Windows source: T19 v1.2
+Final verifier hardening: T19 v1.3
+Migration count: 37
+Locked migrations: #1-#37
+Next migration: #38
+
+T1-T16 migration manifest SHA-256:
+8deddca35fefed24c1aa63f4281f3daf0c443bebf626890c5f081a3feb875300  docs/T17_FINAL_INTEGRITY.txt
+
+T19 migration SHA-256:
+6b6a3d2c9acd88cbdd8809fa9af5349d883f7b4b947974406d30991d90faaee6  supabase/migrations/20260904014416_t19_universal_qr_operations.sql
+
+T19 verifier and security evidence SHA-256:
+fe2296d6930fc0b15d20b1ff3d0dbc8c8f5d73d2784ca3063d7da16b1d345bf9  scripts/t17-demo-load.mjs
+d4ba34e553354d8c093ffca4f72ef2d23e8711ced1a67ce2185a985a14eb35b2  scripts/t19-runtime-verify.mjs
+6c595c05eaa3fa636e4d7ceb9074dbcf0bc42fc256a5290b507f2377e2d1e8da  scripts/t19-source-check.mjs
+50a562209442f03331526aa3595a933f0c2728b26c9aadb01912cde3f643a5bb  supabase/tests/t19_verify.sql
+
+T19 application and seed SHA-256:
+2a40ea798fafc0df07b583476cf58cf7cb7e43cccaed2de26c15716f7e026d05  app/src/App.tsx
+da785e25b19b01e02d36bfc3c3a1ea49c2578609fdc1e0dbc9fc9abeedd171a3  app/src/features/qr/QrCommandCenter.tsx
+90776338aa8bb71b3dd8d81b5f00e89411400d68e77e1cc6c5dd225fe04c1fe3  supabase/seed.sql
+
+Dependency locks SHA-256:
+a320a5204fe93a1cd830be1d38c59cb178c2488f72d943759a7412ff02707a6c  package-lock.json
+426b6edd08f183ba19120cbb209717abed4160e9d2ad223f9e3a220fb1cc0406  app/package-lock.json
+2a440df79c6ca7694bc14d8d1c2035c0bd8ccd19b239c2846f42a2551903215b  worker/package-lock.json
+
+Acceptance record SHA-256:
+f7191fb5bada263052b2c13b0d80c4114940fdcbabbeeddd82e7451e97fd07dd  docs/T19_FINAL_ACCEPTANCE.md

@@ -1,0 +1,57 @@
+HomeTechVN T17 v1.14 static/source audit
+
+> node scripts/t17-powershell-static-check.mjs
+T17 PowerShell managed-source scope: PASS (30 managed files; 0 unmanaged/vendor .ps1 ignored)
+T17 POWERSHELL GLOBAL STATIC CHECK: PASS (30 managed files, UTF-8 BOM + ASCII + lexical balance)
+
+> node scripts/t17-resolve-local-config.mjs --self-test
+T17 LOCAL CONFIG RESOLVER SELF TEST: PASS
+T17 AUTH READINESS RETRY CONTRACT: PASS
+
+> node scripts/t17-demo-load.mjs --self-test
+T17 NODE DEMO LOADER SELF TEST: PASS
+
+> node scripts/t17-source-check.mjs
+T17 clean Node demo-loader architecture: PASS
+T17 PowerShell duplicate-function regression guard: PASS
+T17 migration/data/privacy contracts: PASS
+T17 DEMO SOURCE CHECK: PASS
+
+> node scripts/t11-ui-check.mjs
+T11 responsive table scan: PASS (32 tables)
+T11 touch/focus/mobile foundation: PASS
+T11 dashboard responsive structure: PASS
+T11 RESPONSIVE UI CHECK: PASS
+
+> node scripts/t12-ui-check.mjs
+T12 public route before auth gate: PASS
+T12 anonymous RPC-only privacy scan: PASS
+T12 QR generate/copy/download/print: PASS
+T12 Cloudflare noindex/no-referrer headers: PASS
+T12 RESPONSIVE PUBLIC UI CHECK: PASS
+
+> node scripts/t13-ui-check.mjs
+T13 report tables responsive: PASS (6 tables)
+T13 report RPC-only data access: PASS
+T13 profit coverage / missing-cost warnings: PASS
+T13 CSV / print / date range controls: PASS
+T13 RESPONSIVE UI CHECK: PASS
+
+> node scripts/t14-pwa-check.mjs
+T14 manifest/install source contract: PASS
+T14 prompt-update lifecycle: PASS
+T14 offline transaction lock: PASS
+T14 no Background Sync / no Supabase runtime cache: PASS
+T14 icons: PASS (192/512/maskable/Apple)
+T14 PWA SOURCE CHECK: PASS
+
+> node --check worker/src/index.js
+
+Final-baseline contracts:
+- business/Auth transactional zero-row set: PASS
+- system reminder_rules expected count: 12
+- system reminder_rules exact code set: PASS 12/12
+- non-system reminder_rules expected count: 0
+- app/.env.local cleanup idempotence guard: PASS
+- T17 migration count: 0
+- locked migration chain unchanged: 36/36
