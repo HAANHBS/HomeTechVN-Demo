@@ -13,6 +13,7 @@ import { NotificationPage } from './features/notifications/NotificationPage'
 import { DashboardPage } from './features/dashboard/DashboardPage'
 import { ReportsPage } from './features/reports/ReportsPage'
 import { AuditPage } from './features/audit/AuditPage'
+import { StaffPage } from './features/staff/StaffPage'
 import { PublicWarrantyPage } from './features/public_warranty/PublicWarrantyPage'
 import { DemoModeBanner } from './features/demo/DemoModeBanner'
 import { QrCommandCenter, type QrAction, type QrResolved, type QrRoute } from './features/qr/QrCommandCenter'
@@ -25,7 +26,7 @@ type AuthState =
   | { status: 'ready'; session: Session; context: AppUserContext }
   | { status: 'blocked'; session: Session; message: string }
 
-type Module = 'dashboard' | 'reports' | 'audit' | 'crm' | 'inventory' | 'sales' | 'repair' | 'checklist' | 'warranty' | 'service-license' | 'reminders' | 'notifications'
+type Module = 'dashboard' | 'reports' | 'audit' | 'staff' | 'crm' | 'inventory' | 'sales' | 'repair' | 'checklist' | 'warranty' | 'service-license' | 'reminders' | 'notifications'
 
 type PublicWarrantyRoute = { matched: false } | { matched: true; token: string | null }
 
@@ -148,6 +149,7 @@ export default function App() {
   const canOpenDashboard = hasPermission(authState.context, 'dashboard.view')
   const canOpenReports = hasPermission(authState.context, 'report.view')
   const canOpenAudit = hasPermission(authState.context, 'audit.view')
+  const canOpenStaff = hasPermission(authState.context, 'user.view')
   const canOpenCrm = hasPermission(authState.context, 'customer.view') || hasPermission(authState.context, 'device.view')
   const canOpenInventory = hasPermission(authState.context, 'product.view') || hasPermission(authState.context, 'inventory.view')
   const canOpenSales = hasPermission(authState.context, 'sale.view')
@@ -167,9 +169,8 @@ export default function App() {
     window.history.replaceState({}, '', `${url.pathname}${url.search}${url.hash}`)
   }
 
-  const qrControls = (
+  const qrHandoffNotice = (
     <>
-      <QrCommandCenter context={authState.context} initialToken={initialQrToken} onNavigate={handleQrNavigate} />
       {qrHandoff ? (
         <aside className="fixed bottom-20 right-5 z-30 max-w-sm rounded-2xl border border-cyan-800 bg-slate-950/95 p-3 text-sm text-slate-200 shadow-2xl" aria-live="polite">
           <div className="flex items-start gap-3">
@@ -185,17 +186,23 @@ export default function App() {
     </>
   )
 
+  const globalQuickActions = (
+    <div className="global-quick-actions" aria-label="Điều hướng nhanh">
+      {canOpenDashboard ? (
+        <button type="button" className="global-home-button" onClick={() => setModule('dashboard')} aria-label="Mở Tổng quan" aria-current={module === 'dashboard' ? 'page' : undefined}>
+          <span aria-hidden="true">⌂</span><span>Tổng quan</span>
+        </button>
+      ) : null}
+      <QrCommandCenter context={authState.context} initialToken={initialQrToken} onNavigate={handleQrNavigate} triggerClassName="global-qr-button" />
+    </div>
+  )
+
   const withDashboard = (node: ReactNode) => (
     <>
       <DemoModeBanner />
       {node}
-      {qrControls}
-      {canOpenDashboard && module !== 'dashboard' ? (
-        <button type="button" className="global-home-button" onClick={() => setModule('dashboard')} aria-label="Quay về Tổng quan">
-          <span aria-hidden="true">⌂</span>
-          <span>Tổng quan</span>
-        </button>
-      ) : null}
+      {globalQuickActions}
+      {qrHandoffNotice}
     </>
   )
 
@@ -216,8 +223,10 @@ export default function App() {
           onOpenNotifications={canOpenNotifications ? () => setModule('notifications') : undefined}
           onOpenReports={canOpenReports ? () => setModule('reports') : undefined}
           onOpenAudit={canOpenAudit ? () => setModule('audit') : undefined}
+          onOpenStaff={canOpenStaff ? () => setModule('staff') : undefined}
         />
-        {qrControls}
+        {globalQuickActions}
+        {qrHandoffNotice}
       </>
     )
   }
@@ -228,6 +237,10 @@ export default function App() {
 
   if (module === 'audit' && canOpenAudit) {
     return withDashboard(<AuditPage context={authState.context} />)
+  }
+
+  if (module === 'staff' && canOpenStaff) {
+    return withDashboard(<StaffPage context={authState.context} />)
   }
 
   if (module === 'notifications' && canOpenNotifications) {
@@ -296,6 +309,10 @@ export default function App() {
 
   if (canOpenAudit) {
     return withDashboard(<AuditPage context={authState.context} />)
+  }
+
+  if (canOpenStaff) {
+    return withDashboard(<StaffPage context={authState.context} />)
   }
 
   if (canOpenReports) {

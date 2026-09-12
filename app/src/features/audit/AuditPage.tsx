@@ -147,7 +147,7 @@ export function AuditPage({ context }: { context: AppUserContext }) {
         setResult(next)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không tải được Audit Log.')
+      setError(err instanceof Error ? err.message : 'Không tải được nhật ký kiểm toán.')
     } finally {
       setLoading(false)
     }
@@ -167,7 +167,7 @@ export function AuditPage({ context }: { context: AppUserContext }) {
 
   const securityCards = snapshot ? [
     {
-      label: 'Audit events',
+      label: 'Sự kiện kiểm toán',
       value: String(snapshot.audit.rows),
       note: `Mới nhất ${dateTime(snapshot.audit.last_event_at)}`,
       ok: snapshot.audit.rows >= 0,
@@ -210,7 +210,7 @@ export function AuditPage({ context }: { context: AppUserContext }) {
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
           <div>
             <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN · T16</div>
-            <h1 className="mt-1 text-lg font-bold text-white sm:text-xl">Bảo mật & Nhật ký Audit</h1>
+            <h1 className="mt-1 text-lg font-bold text-white sm:text-xl">Bảo mật & nhật ký kiểm toán</h1>
           </div>
           <button
             type="button"
@@ -341,7 +341,7 @@ export function AuditPage({ context }: { context: AppUserContext }) {
         <section className="rounded-3xl border border-slate-800 bg-slate-900/90 p-4 sm:p-5">
           <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
             <div>
-              <h2 className="font-semibold text-white">Audit events</h2>
+              <h2 className="font-semibold text-white">Sự kiện kiểm toán</h2>
               <p className="mt-1 text-xs text-slate-500">
                 {result ? `${result.rows.length} dòng đang hiển thị · tối đa 200 dòng mỗi request` : 'Chưa có dữ liệu'}
               </p>
@@ -423,7 +423,7 @@ export function AuditPage({ context }: { context: AppUserContext }) {
             <div className="flex flex-wrap items-start justify-between gap-3">
               <div>
                 <div className="text-xs font-semibold uppercase tracking-[0.18em] text-cyan-400">
-                  Audit #{selected.id} · {selected.action}
+                  Sự kiện #{selected.id} · {selected.action}
                 </div>
                 <h2 className="mt-2 text-lg font-bold text-white">
                   {selected.table_name} · {selected.record_id || 'không có record id'}

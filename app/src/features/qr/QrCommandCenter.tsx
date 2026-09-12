@@ -33,11 +33,11 @@ type DetectorConstructor = new (options: { formats: string[] }) => Detector
 
 const resources = [
   ['CUSTOMER','Khách hàng','CUS-000001'], ['DEVICE','Thiết bị','DEV-000001'],
-  ['PRODUCT','Sản phẩm','SKU hoặc UUID'], ['INVENTORY_UNIT','Serial kho','Serial / Asset tag'],
+  ['PRODUCT','Sản phẩm','SKU hoặc UUID'], ['INVENTORY_UNIT','Số sê-ri kho','Số sê-ri / mã tài sản'],
   ['SALES_ORDER','Đơn bán','SO-20260904-0001'], ['PAYMENT','Thanh toán','PAY-20260904-0001'],
   ['REPAIR_ORDER','Phiếu sửa','SRV-20260904-0001'], ['WARRANTY','Bảo hành','WAR-000001'],
   ['WARRANTY_CLAIM','Yêu cầu bảo hành','WCL-000001'], ['SERVICE_SCHEDULE','Lịch dịch vụ','UUID'],
-  ['SOFTWARE_LICENSE','Bản quyền','LIC-000001'], ['CHECKLIST_RUN','Checklist','UUID'],
+  ['SOFTWARE_LICENSE','Bản quyền','LIC-000001'], ['CHECKLIST_RUN','Danh sách kiểm tra','UUID'],
   ['REMINDER','Nhắc việc','REM-000001'], ['NOTIFICATION','Thông báo','UUID'],
 ] as const
 
@@ -59,10 +59,12 @@ export function QrCommandCenter({
   context,
   initialToken,
   onNavigate,
+  triggerClassName,
 }: {
   context: AppUserContext
   initialToken?: string | null
   onNavigate: (route: QrRoute, target: QrResolved, action: QrAction) => void
+  triggerClassName?: string
 }) {
   const [open,setOpen] = useState(Boolean(initialToken))
   const [tab,setTab] = useState<'scan'|'issue'>('scan')
@@ -177,7 +179,7 @@ export function QrCommandCenter({
   const canRevoke = hasPermission(context,'qr.revoke')
 
   return <>
-    <button type="button" onClick={() => setOpen(true)} className="fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-bold text-slate-950 shadow-2xl shadow-cyan-950/50 hover:bg-cyan-300" aria-label="Mở trung tâm QR">
+    <button type="button" onClick={() => setOpen(true)} className={triggerClassName ?? 'fixed bottom-5 right-5 z-40 flex items-center gap-2 rounded-2xl bg-cyan-400 px-4 py-3 text-sm font-bold text-slate-950 shadow-2xl shadow-cyan-950/50 hover:bg-cyan-300'} aria-label="Mở trung tâm QR">
       <span className="text-lg" aria-hidden="true">▦</span><span>Quét QR</span>
     </button>
 

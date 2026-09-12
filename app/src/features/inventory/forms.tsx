@@ -8,6 +8,7 @@ import type {
   ProductInventorySummaryRow,
   ProductRow,
 } from '../../lib/database.types'
+import { Modal } from '../crm/forms'
 
 function nullable(value: string) {
   const trimmed = value.trim()
@@ -163,6 +164,8 @@ export function ProductForm({
   const [sku, setSku] = useState(initial?.sku ?? '')
   const [name, setName] = useState(initial?.name ?? '')
   const [categoryId, setCategoryId] = useState(initial?.category_id ?? '')
+  const [availableCategories, setAvailableCategories] = useState(categories)
+  const [showCategoryForm, setShowCategoryForm] = useState(false)
   const [brand, setBrand] = useState(initial?.brand ?? '')
   const [model, setModel] = useState(initial?.model ?? '')
   const [barcode, setBarcode] = useState(initial?.barcode ?? '')
@@ -175,6 +178,14 @@ export function ProductForm({
   const [active, setActive] = useState(initial?.is_active ?? true)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  useEffect(() => {
+    setAvailableCategories((current) => {
+      const merged = new Map(current.map((row) => [row.id, row]))
+      categories.forEach((row) => merged.set(row.id, row))
+      return [...merged.values()]
+    })
+  }, [categories])
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault()
@@ -242,10 +253,11 @@ export function ProductForm({
             onChange={(event) => setCategoryId(event.target.value)}
           >
             <option value="">— Chưa phân loại —</option>
-            {categories.filter((item) => item.is_active || item.id === categoryId).map((item) => (
+            {availableCategories.filter((item) => item.is_active || item.id === categoryId).map((item) => (
               <option key={item.id} value={item.id}>{item.name}</option>
             ))}
           </select>
+          <button type="button" onClick={() => setShowCategoryForm(true)} className="mt-2 text-xs font-semibold text-cyan-300 hover:underline">+ Thêm nhanh danh mục mới</button>
         </label>
         <label className="block text-sm font-medium">
           Đơn vị
@@ -300,6 +312,16 @@ export function ProductForm({
       {initial ? <p className="text-xs text-slate-500">SKU không thể đổi. Chế độ Serial chỉ đổi được trước khi sản phẩm có phát sinh kho.</p> : null}
       <FormActions busy={busy} onCancel={onCancel} submitLabel={initial ? 'Cập nhật sản phẩm' : 'Tạo sản phẩm'} />
       <ErrorBox message={error} />
+      {showCategoryForm ? <Modal title="Thêm nhanh danh mục sản phẩm" onClose={() => setShowCategoryForm(false)}>
+        <CategoryForm
+          onCancel={() => setShowCategoryForm(false)}
+          onSaved={(row) => {
+            setAvailableCategories((current) => [row, ...current.filter((item) => item.id !== row.id)])
+            setCategoryId(row.id)
+            setShowCategoryForm(false)
+          }}
+        />
+      </Modal> : null}
     </form>
   )
 }

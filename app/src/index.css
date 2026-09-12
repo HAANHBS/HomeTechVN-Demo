@@ -106,11 +106,18 @@ button {
   overflow-wrap: anywhere;
 }
 
-.global-home-button {
+.global-quick-actions {
   position: fixed;
   right: max(1rem, env(safe-area-inset-right));
-  bottom: max(1rem, env(safe-area-inset-bottom));
-  z-index: 60;
+  top: max(3.25rem, env(safe-area-inset-top));
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.global-home-button,
+.global-qr-button {
   display: inline-flex;
   min-height: 48px;
   align-items: center;
@@ -127,8 +134,20 @@ button {
   backdrop-filter: blur(14px);
 }
 
-.global-home-button:hover {
+.global-home-button:hover,
+.global-qr-button:hover {
   background: rgba(22, 78, 99, 0.96);
+}
+
+.global-home-button[aria-current="page"] {
+  border-color: rgba(34, 211, 238, 0.75);
+  background: rgba(22, 78, 99, 0.96);
+  color: #ecfeff;
+}
+
+.global-qr-button {
+  background: rgba(34, 211, 238, 0.96);
+  color: #082f49;
 }
 
 @media (max-width: 640px) {
@@ -138,10 +157,16 @@ button {
     font-size: 16px;
   }
 
-  .global-home-button {
+  .global-quick-actions {
     right: 0.75rem;
-    bottom: max(0.75rem, env(safe-area-inset-bottom));
+    top: max(3.1rem, env(safe-area-inset-top));
+    gap: 0.35rem;
+  }
+
+  .global-home-button,
+  .global-qr-button {
     padding-inline: 0.85rem;
+    font-size: 0.8rem;
   }
 }
 

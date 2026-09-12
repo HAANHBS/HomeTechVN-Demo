@@ -58,7 +58,7 @@ export function CreateOrderForm({
       })
       if (rpcError) throw rpcError
       const orderId = typeof data === 'object' && data && !Array.isArray(data) ? String((data as Record<string, unknown>).id ?? '') : ''
-      if (!orderId) throw new Error('RPC không trả order id.')
+      if (!orderId) throw new Error('Hệ thống không trả về mã đơn bán.')
       onCreated(orderId)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Không tạo được đơn bán.')
@@ -78,11 +78,13 @@ export function CreateOrderForm({
 export function EditOrderForm({
   order,
   customers,
+  canCreateCustomer,
   onCancel,
   onDone,
 }: {
   order: SalesOrderRow
   customers: CustomerRow[]
+  canCreateCustomer: boolean
   onCancel: () => void
   onDone: () => void
 }) {
@@ -108,11 +110,7 @@ export function EditOrderForm({
   }
 
   return <form className="space-y-4" onSubmit={submit}>
-    <label className="block text-sm font-medium">Khách hàng
-      <select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={customerId} onChange={(e) => setCustomerId(e.target.value)}>
-        {customers.map((c) => <option key={c.id} value={c.id}>{c.customer_code} · {c.full_name}</option>)}
-      </select>
-    </label>
+    <CustomerQuickPicker customers={customers} value={customerId} onChange={setCustomerId} canCreate={canCreateCustomer} />
     <label className="block text-sm font-medium">Giảm giá toàn đơn
       <input type="number" min="0" step="1000" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={discount} onChange={(e) => setDiscount(e.target.value)} />
     </label>
@@ -199,7 +197,7 @@ export function ItemForm({
         if (rpcError) throw rpcError
       }
       onDone()
-    } catch (err) { setError(err instanceof Error ? err.message : 'Không lưu được dòng hàng.') }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Không lưu được hàng trong đơn.') }
     finally { setBusy(false) }
   }
 
@@ -247,7 +245,7 @@ export function ItemForm({
       </div>
     ) : null}
 
-    <Actions busy={busy} onCancel={onCancel} label={initial ? 'Cập nhật dòng' : 'Thêm dòng'} />
+    <Actions busy={busy} onCancel={onCancel} label={initial ? 'Cập nhật hàng' : 'Thêm hàng vào đơn'} />
     <ErrorBox message={error} />
   </form>
 }

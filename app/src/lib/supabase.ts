@@ -17,3 +17,13 @@ export const supabase = createClient<Database>(supabaseUrl, publishableKey, {
     detectSessionInUrl: true,
   },
 })
+
+export function createIsolatedAuthClient() {
+  return createClient<Database>(supabaseUrl!, publishableKey!, {
+    auth: {
+      persistSession: false,
+      autoRefreshToken: false,
+      detectSessionInUrl: false,
+    },
+  })
+}

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import type { Json, NotificationLogRow, NotificationSummaryRow, ReminderRuleRow } from '../../lib/database.types'
 import { hasPermission, type AppUserContext } from '../../lib/permissions'
 import { supabase } from '../../lib/supabase'
+import { viChannel, viStatus } from '../../lib/vi'
 import { Modal } from '../crm/forms'
 import type { QrAction, QrResolved } from '../qr/QrCommandCenter'
 
@@ -169,7 +170,7 @@ function ChannelEditor({
       <textarea className="mt-2 min-h-48 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-xs" value={text} onChange={(e) => setText(e.target.value)} />
       <span className="mt-1 block text-xs text-slate-500">{helper}</span>
     </label>
-    {channel !== 'IN_APP' ? <label className="block text-sm font-medium">Secret reference
+    {channel !== 'IN_APP' ? <label className="block text-sm font-medium">Tham chiếu bí mật
       <input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm" value={secretRef} onChange={(e) => setSecretRef(e.target.value)} placeholder="env://..." />
       <span className="mt-1 block text-xs text-amber-300">Không nhập token/API key thật vào đây. Chỉ nhập URI tham chiếu secret.</span>
     </label> : null}
@@ -235,7 +236,7 @@ export function NotificationPage({
         setSettings(s.data as SettingRow[])
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không tải được Notification Center.')
+      setError(err instanceof Error ? err.message : 'Không tải được trung tâm thông báo.')
     }
   }, [canManage, canSettings])
 
@@ -306,7 +307,7 @@ export function NotificationPage({
   return <main className="min-h-screen bg-slate-950 text-slate-200">
     <header className="border-b border-slate-800 bg-slate-900/90 px-4 py-4 sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
-        <div><div className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN</div><h1 className="mt-1 text-xl font-bold text-white">Notification Center</h1></div>
+        <div><div className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN</div><h1 className="mt-1 text-xl font-bold text-white">Trung tâm thông báo</h1></div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
           {onOpenCrm ? <button onClick={onOpenCrm} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">CRM</button> : null}
           {onOpenReminders ? <button onClick={onOpenReminders} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Reminder</button> : null}
@@ -319,15 +320,15 @@ export function NotificationPage({
     <div className="mx-auto max-w-7xl space-y-5 px-4 py-6 sm:px-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => setTab('inbox')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'inbox' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>In-app {unread ? `(${unread})` : ''}</button>
-          {canManage ? <button onClick={() => setTab('outbox')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'outbox' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Outbox</button> : null}
-          {canManage ? <button onClick={() => setTab('routes')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'routes' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Routing</button> : null}
+          <button onClick={() => setTab('inbox')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'inbox' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Trong ứng dụng {unread ? `(${unread})` : ''}</button>
+          {canManage ? <button onClick={() => setTab('outbox')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'outbox' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Hàng đợi gửi</button> : null}
+          {canManage ? <button onClick={() => setTab('routes')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'routes' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Phân luồng</button> : null}
           {canSettings ? <button onClick={() => setTab('channels')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'channels' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Kênh</button> : null}
-          {canManage ? <button onClick={() => setTab('logs')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'logs' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Logs</button> : null}
+          {canManage ? <button onClick={() => setTab('logs')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'logs' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Nhật ký gửi</button> : null}
         </div>
         <div className="flex gap-2">
           <button onClick={() => void load()} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Làm mới</button>
-          {canManage ? <button disabled={busy} onClick={() => void prepare()} className="rounded-xl border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-50">{busy ? 'Đang prepare…' : 'Prepare outbox'}</button> : null}
+          {canManage ? <button disabled={busy} onClick={() => void prepare()} className="rounded-xl border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-50">{busy ? 'Đang chuẩn bị…' : 'Chuẩn bị hàng đợi'}</button> : null}
         </div>
       </div>
 
@@ -343,22 +344,22 @@ export function NotificationPage({
             {!n.read_at ? <button onClick={() => void markRead(n.id!)} className="rounded-lg border border-cyan-900 px-2 py-1 text-xs text-cyan-300">Đã đọc</button> : null}
           </div>
         </article> : null)}
-        {!inbox.length ? <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-500">Chưa có thông báo in-app.</div> : null}
+        {!inbox.length ? <div className="rounded-2xl border border-slate-800 bg-slate-900 p-8 text-center text-slate-500">Chưa có thông báo trong ứng dụng.</div> : null}
       </section> : null}
 
       {tab === 'outbox' && canManage ? <>
         <div className="grid gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 sm:grid-cols-2">
-          <select value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"><option value="ALL">Tất cả kênh</option>{['IN_APP','TELEGRAM','EMAIL','ZALO'].map((x) => <option key={x}>{x}</option>)}</select>
-          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"><option value="ALL">Tất cả trạng thái</option>{['PENDING','PROCESSING','RETRYING','SENT','FAILED','CANCELLED'].map((x) => <option key={x}>{x}</option>)}</select>
+          <select value={filterChannel} onChange={(e) => setFilterChannel(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"><option value="ALL">Tất cả kênh</option>{['IN_APP','TELEGRAM','EMAIL','ZALO'].map((x) => <option key={x} value={x}>{viChannel(x)}</option>)}</select>
+          <select value={filterStatus} onChange={(e) => setFilterStatus(e.target.value)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2"><option value="ALL">Tất cả trạng thái</option>{['PENDING','PROCESSING','RETRYING','SENT','FAILED','CANCELLED'].map((x) => <option key={x} value={x}>{viStatus(x)}</option>)}</select>
         </div>
         <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"><div className="overflow-x-auto"><table className="w-full min-w-[1250px] text-left text-sm">
-          <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Notification</th><th className="px-4 py-3">Kênh</th><th className="px-4 py-3">Người nhận</th><th className="px-4 py-3">Nội dung</th><th className="px-4 py-3">Attempt</th><th className="px-4 py-3">Status</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
-          <tbody>{outbox.map((n) => n.id ? <tr key={n.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-mono text-cyan-300">{n.notification_code}</div><div className="text-xs text-slate-500">{n.rule_code_snapshot}</div></td><td className="px-4 py-3">{n.channel}<div className="text-xs text-slate-500">{n.provider}</div></td><td className="px-4 py-3">{n.recipient_profile_name ?? n.customer_name ?? '—'}<div className="max-w-56 truncate text-xs text-slate-500">{n.recipient_address ?? '—'}</div></td><td className="max-w-md px-4 py-3"><div className="font-medium text-white">{n.subject}</div><div className="line-clamp-2 text-xs text-slate-400">{n.body}</div></td><td className="px-4 py-3">{n.attempt_count}/{n.max_attempts}<div className="text-xs text-slate-500">{dateTime(n.last_attempt_at)}</div></td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(n.status)}`}>{n.status}</span>{n.last_error_message ? <div className="mt-1 max-w-56 truncate text-xs text-red-300">{n.last_error_code}: {n.last_error_message}</div> : null}</td><td className="px-4 py-3 text-right"><div className="flex justify-end gap-1">{n.status === 'FAILED' ? <button onClick={() => void retry(n.id!)} className="rounded-lg border border-amber-800 px-2 py-1 text-xs text-amber-300">Retry</button> : null}{!['SENT','CANCELLED'].includes(n.status ?? '') ? <button onClick={() => void cancel(n.id!)} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Hủy</button> : null}</div></td></tr> : null)}</tbody>
+          <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Thông báo</th><th className="px-4 py-3">Kênh</th><th className="px-4 py-3">Người nhận</th><th className="px-4 py-3">Nội dung</th><th className="px-4 py-3">Số lần gửi</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
+          <tbody>{outbox.map((n) => n.id ? <tr key={n.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-mono text-cyan-300">{n.notification_code}</div><div className="text-xs text-slate-500">{n.rule_code_snapshot}</div></td><td className="px-4 py-3">{viChannel(n.channel)}<div className="text-xs text-slate-500">{n.provider}</div></td><td className="px-4 py-3">{n.recipient_profile_name ?? n.customer_name ?? '—'}<div className="max-w-56 truncate text-xs text-slate-500">{n.recipient_address ?? '—'}</div></td><td className="max-w-md px-4 py-3"><div className="font-medium text-white">{n.subject}</div><div className="line-clamp-2 text-xs text-slate-400">{n.body}</div></td><td className="px-4 py-3">{n.attempt_count}/{n.max_attempts}<div className="text-xs text-slate-500">{dateTime(n.last_attempt_at)}</div></td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(n.status)}`}>{viStatus(n.status)}</span>{n.last_error_message ? <div className="mt-1 max-w-56 truncate text-xs text-red-300">{n.last_error_code}: {n.last_error_message}</div> : null}</td><td className="px-4 py-3 text-right"><div className="flex justify-end gap-1">{n.status === 'FAILED' ? <button onClick={() => void retry(n.id!)} className="rounded-lg border border-amber-800 px-2 py-1 text-xs text-amber-300">Gửi lại</button> : null}{!['SENT','CANCELLED'].includes(n.status ?? '') ? <button onClick={() => void cancel(n.id!)} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Hủy</button> : null}</div></td></tr> : null)}</tbody>
         </table></div></div>
       </> : null}
 
       {tab === 'routes' && canManage ? <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"><div className="overflow-x-auto"><table className="w-full min-w-[1050px] text-left text-sm">
-        <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Rule</th><th className="px-4 py-3">Staff</th><th className="px-4 py-3">Khách hàng</th><th className="px-4 py-3 text-right">Cấu hình</th></tr></thead>
+        <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Quy tắc</th><th className="px-4 py-3">Nhân viên</th><th className="px-4 py-3">Khách hàng</th><th className="px-4 py-3 text-right">Cấu hình</th></tr></thead>
         <tbody>{rules.map((r) => <tr key={r.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-mono text-cyan-300">{r.rule_code}</div><div className="text-xs text-slate-400">{r.name}</div></td><td className="px-4 py-3">{r.staff_channels.join(', ') || '—'}</td><td className="px-4 py-3">{r.customer_channels.join(', ') || '—'}</td><td className="px-4 py-3 text-right"><button onClick={() => setEditingRule(r)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs">Sửa</button></td></tr>)}</tbody>
       </table></div></div> : null}
 
@@ -378,8 +379,8 @@ export function NotificationPage({
       </div> : null}
 
       {tab === 'logs' && canManage ? <div className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"><div className="overflow-x-auto"><table className="w-full min-w-[1000px] text-left text-sm">
-        <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Attempt</th><th className="px-4 py-3">Kênh</th><th className="px-4 py-3">Status</th><th className="px-4 py-3">External ID</th><th className="px-4 py-3">Error</th><th className="px-4 py-3">Thời gian</th></tr></thead>
-        <tbody>{logs.map((l) => <tr key={l.id} className="border-t border-slate-800"><td className="px-4 py-3">#{l.attempt_no}<div className="font-mono text-[10px] text-slate-500">{l.notification_id}</div></td><td className="px-4 py-3">{l.channel}<div className="text-xs text-slate-500">{l.provider}</div></td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(l.status)}`}>{l.status}</span></td><td className="px-4 py-3 font-mono text-xs">{l.external_message_id ?? '—'}</td><td className="px-4 py-3 text-xs text-red-300">{l.error_code ? `${l.error_code}: ${l.error_message ?? ''}` : '—'}</td><td className="px-4 py-3 text-xs">{dateTime(l.started_at)}<br/>{dateTime(l.finished_at)}</td></tr>)}</tbody>
+        <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Lần gửi</th><th className="px-4 py-3">Kênh</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3">Mã bên cung cấp</th><th className="px-4 py-3">Lỗi</th><th className="px-4 py-3">Thời gian</th></tr></thead>
+        <tbody>{logs.map((l) => <tr key={l.id} className="border-t border-slate-800"><td className="px-4 py-3">#{l.attempt_no}<div className="font-mono text-[10px] text-slate-500">{l.notification_id}</div></td><td className="px-4 py-3">{viChannel(l.channel)}<div className="text-xs text-slate-500">{l.provider}</div></td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(l.status)}`}>{viStatus(l.status)}</span></td><td className="px-4 py-3 font-mono text-xs">{l.external_message_id ?? '—'}</td><td className="px-4 py-3 text-xs text-red-300">{l.error_code ? `${l.error_code}: ${l.error_message ?? ''}` : '—'}</td><td className="px-4 py-3 text-xs">{dateTime(l.started_at)}<br/>{dateTime(l.finished_at)}</td></tr>)}</tbody>
       </table></div></div> : null}
 
       <div className="rounded-xl border border-slate-800 bg-slate-900 p-3 text-xs text-slate-500">
@@ -387,7 +388,7 @@ export function NotificationPage({
       </div>
     </div>
 
-    {editingRule ? <Modal title="Routing notification" onClose={() => setEditingRule(null)}><RuleRouteEditor rule={editingRule} onCancel={() => setEditingRule(null)} onDone={() => { setEditingRule(null); void load() }} /></Modal> : null}
+    {editingRule ? <Modal title="Phân luồng thông báo" onClose={() => setEditingRule(null)}><RuleRouteEditor rule={editingRule} onCancel={() => setEditingRule(null)} onDone={() => { setEditingRule(null); void load() }} /></Modal> : null}
     {editingChannel ? <Modal title={`Cấu hình ${editingChannel}`} onClose={() => setEditingChannel(null)}><ChannelEditor
       channel={editingChannel}
       setting={setting(editingChannel === 'IN_APP' ? 'notification.in_app' : `notification.${editingChannel.toLowerCase()}.config`)}

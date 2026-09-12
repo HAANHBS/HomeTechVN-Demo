@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState, type FormEvent } from 'react
 import type { Json, ReminderRuleRow, ReminderSummaryRow } from '../../lib/database.types'
 import { hasPermission, type AppUserContext } from '../../lib/permissions'
 import { supabase } from '../../lib/supabase'
+import { viPriority, viStatus } from '../../lib/vi'
 import { Modal } from '../crm/forms'
 import type { QrAction, QrResolved } from '../qr/QrCommandCenter'
 
@@ -110,7 +111,7 @@ function RuleForm({
   return <form className="space-y-4" onSubmit={submit}>
     {!initial ? <label className="block text-sm font-medium">Rule code
       <input required pattern="[A-Za-z0-9_]+" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 uppercase" value={code} onChange={(e) => setCode(e.target.value)} placeholder="CUSTOM_RULE" />
-    </label> : <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3"><div className="font-mono text-sm text-cyan-300">{initial.rule_code}</div><div className="mt-1 text-xs text-slate-500">{initial.event_type} · {initial.is_system ? 'SYSTEM' : 'CUSTOM'}</div></div>}
+    </label> : <div className="rounded-xl border border-slate-800 bg-slate-950/50 p-3"><div className="font-mono text-sm text-cyan-300">{initial.rule_code}</div><div className="mt-1 text-xs text-slate-500">{initial.event_type} · {initial.is_system ? 'Hệ thống' : 'Tùy chỉnh'}</div></div>}
     <label className="block text-sm font-medium">Tên
       <input required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} />
     </label>
@@ -258,7 +259,7 @@ export function ReminderPage({
     const { error: rpcError } = await supabase.rpc('reminder_snooze', {
       p_reminder_id: row.id,
       p_snoozed_until: until,
-      p_note: `Snooze ${hours} giờ`,
+      p_note: `Tạm hoãn ${hours} giờ`,
     })
     if (rpcError) setError(rpcError.message); else await load()
   }
@@ -299,7 +300,7 @@ export function ReminderPage({
       <div className="grid gap-3 sm:grid-cols-4">
         <div className="rounded-2xl border border-red-900/60 bg-red-950/20 p-4"><div className="text-xs uppercase text-red-400">Đến hạn</div><div className="mt-1 text-3xl font-bold text-white">{counts.due}</div></div>
         <div className="rounded-2xl border border-cyan-900/60 bg-cyan-950/20 p-4"><div className="text-xs uppercase text-cyan-400">Sắp tới</div><div className="mt-1 text-3xl font-bold text-white">{counts.pending}</div></div>
-        <div className="rounded-2xl border border-amber-900/60 bg-amber-950/20 p-4"><div className="text-xs uppercase text-amber-400">Snoozed</div><div className="mt-1 text-3xl font-bold text-white">{counts.snoozed}</div></div>
+        <div className="rounded-2xl border border-amber-900/60 bg-amber-950/20 p-4"><div className="text-xs uppercase text-amber-400">Đã tạm hoãn</div><div className="mt-1 text-3xl font-bold text-white">{counts.snoozed}</div></div>
         <div className="rounded-2xl border border-violet-900/60 bg-violet-950/20 p-4"><div className="text-xs uppercase text-violet-400">Đã xác nhận</div><div className="mt-1 text-3xl font-bold text-white">{counts.acknowledged}</div></div>
       </div>
 
@@ -311,7 +312,7 @@ export function ReminderPage({
         <div className="flex gap-2">
           <button onClick={() => void load()} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Làm mới</button>
           {canManage ? <button disabled={busy} onClick={() => void runEngine()} className="rounded-xl border border-emerald-800 px-4 py-2 text-sm font-semibold text-emerald-300 disabled:opacity-50">{busy ? 'Đang quét…' : 'Chạy engine'}</button> : null}
-          {tab === 'rules' && canManage ? <button onClick={() => setShowCreateRule(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Rule</button> : null}
+          {tab === 'rules' && canManage ? <button onClick={() => setShowCreateRule(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Tạo mới</button> : null}
         </div>
       </div>
 
@@ -324,10 +325,10 @@ export function ReminderPage({
           <input className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm" value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Tìm mã, khách, nguồn, nội dung…" />
           <select className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm" value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}>
             <option value="ACTIVE">Đang hoạt động</option><option value="ALL">Tất cả</option>
-            {['DUE','PENDING','SNOOZED','ACKNOWLEDGED','RESOLVED','CANCELLED'].map((x) => <option key={x}>{x}</option>)}
+            {['DUE','PENDING','SNOOZED','ACKNOWLEDGED','RESOLVED','CANCELLED'].map((x) => <option key={x} value={x}>{viStatus(x)}</option>)}
           </select>
           <select className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm" value={eventFilter} onChange={(e) => setEventFilter(e.target.value)}>
-            <option value="ALL">Tất cả event</option>{EVENT_TYPES.map((x) => <option key={x}>{x}</option>)}
+            <option value="ALL">Tất cả loại nhắc việc</option>{EVENT_TYPES.map((x) => <option key={x}>{x}</option>)}
           </select>
         </div>
 
@@ -337,8 +338,8 @@ export function ReminderPage({
               <div className="min-w-0 flex-1">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="font-mono text-xs text-cyan-400">{r.reminder_code}</span>
-                  <span className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${statusClass(r.status)}`}>{r.status}</span>
-                  <span className={`text-xs font-semibold ${priorityClass(r.priority)}`}>{r.priority}</span>
+                  <span title={r.status ?? undefined} className={`rounded-lg px-2 py-1 text-[10px] font-semibold ${statusClass(r.status)}`}>{viStatus(r.status)}</span>
+                  <span title={r.priority ?? undefined} className={`text-xs font-semibold ${priorityClass(r.priority)}`}>{viPriority(r.priority)}</span>
                   <span className="rounded bg-slate-800 px-2 py-1 text-[10px] text-slate-400">{r.event_type}</span>
                 </div>
                 <h2 className="mt-2 font-semibold text-white">{r.title}</h2>
@@ -346,16 +347,16 @@ export function ReminderPage({
                 <div className="mt-2 flex flex-wrap gap-x-5 gap-y-1 text-xs text-slate-500">
                   <span>Nguồn: {r.source_type} · {r.source_label ?? '—'}</span>
                   <span>Khách: {r.customer_name ?? '—'} {r.phone ? `· ${r.phone}` : ''}</span>
-                  <span>Due: <strong className="text-slate-300">{dateTime(r.due_at)}</strong></span>
-                  {r.snoozed_until ? <span>Snooze đến: {dateTime(r.snoozed_until)}</span> : null}
+                  <span>Đến hạn: <strong className="text-slate-300">{dateTime(r.due_at)}</strong></span>
+                  {r.snoozed_until ? <span>Tạm hoãn đến: {dateTime(r.snoozed_until)}</span> : null}
                 </div>
                 {r.operator_note ? <div className="mt-2 text-xs text-slate-400">Ghi chú: {r.operator_note}</div> : null}
-                {r.resolution_reason ? <div className="mt-2 text-xs text-emerald-400">Resolve: {r.resolution_reason}</div> : null}
+                {r.resolution_reason ? <div className="mt-2 text-xs text-emerald-400">Kết quả xử lý: {r.resolution_reason}</div> : null}
               </div>
               {!['RESOLVED','CANCELLED'].includes(r.status ?? '') ? <div className="flex flex-wrap gap-1">
                 <button onClick={() => void acknowledge(r)} className="rounded-lg border border-violet-800 px-2 py-1 text-xs text-violet-300">Đã xử lý/xem</button>
-                <button onClick={() => void snooze(r)} className="rounded-lg border border-amber-800 px-2 py-1 text-xs text-amber-300">Snooze</button>
-                {canManage ? <button onClick={() => void resolve(r)} className="rounded-lg border border-emerald-800 px-2 py-1 text-xs text-emerald-300">Resolve</button> : null}
+                <button onClick={() => void snooze(r)} className="rounded-lg border border-amber-800 px-2 py-1 text-xs text-amber-300">Tạm hoãn</button>
+                {canManage ? <button onClick={() => void resolve(r)} className="rounded-lg border border-emerald-800 px-2 py-1 text-xs text-emerald-300">Hoàn tất xử lý</button> : null}
               </div> : null}
             </div>
           </article> : null)}

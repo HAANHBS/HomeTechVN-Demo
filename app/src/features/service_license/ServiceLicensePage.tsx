@@ -11,6 +11,7 @@ import { hasPermission, type AppUserContext } from '../../lib/permissions'
 import { supabase } from '../../lib/supabase'
 import { CustomerDeviceQuickPicker, Modal } from '../crm/forms'
 import type { QrAction, QrResolved } from '../qr/QrCommandCenter'
+import { viBillingModel, viIntervalUnit, viStatus } from '../../lib/vi'
 
 type Tab = 'schedules' | 'services' | 'licenses' | 'software'
 
@@ -305,8 +306,8 @@ function SoftwareProductForm({
       <label className="text-sm font-medium">Nhóm<select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={category} onChange={(e) => setCategory(e.target.value)}>{['WINDOWS','OFFICE','M365','ANTIVIRUS','CAMERA_CLOUD','HOSTING','DOMAIN','BACKUP','ACCOUNTING','OTHER'].map((x) => <option key={x}>{x}</option>)}</select></label>
       <label className="text-sm font-medium">Nhà cung cấp<input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={vendor} onChange={(e) => setVendor(e.target.value)} /></label>
       <label className="text-sm font-medium">Tên sản phẩm<input required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={name} onChange={(e) => setName(e.target.value)} /></label>
-      <label className="text-sm font-medium">Edition<input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={edition} onChange={(e) => setEdition(e.target.value)} /></label>
-      <label className="text-sm font-medium">Mô hình<select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={billing} onChange={(e) => setBilling(e.target.value)}><option value="SUBSCRIPTION">Subscription</option><option value="ONE_TIME">One-time</option></select></label>
+      <label className="text-sm font-medium">Phiên bản<input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={edition} onChange={(e) => setEdition(e.target.value)} /></label>
+      <label className="text-sm font-medium">Mô hình thanh toán<select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={billing} onChange={(e) => setBilling(e.target.value)}><option value="SUBSCRIPTION">Định kỳ</option><option value="ONE_TIME">Một lần</option></select></label>
       <label className="text-sm font-medium">Thời hạn mặc định (tháng)<input type="number" min="1" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={term} onChange={(e) => setTerm(e.target.value)} /></label>
     </div>
     <label className="block text-sm font-medium">Mô tả<textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={description} onChange={(e) => setDescription(e.target.value)} /></label>
@@ -369,7 +370,7 @@ function LicenseForm({
       if (rpcError) throw rpcError
       onDone()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không tạo được License.')
+      setError(err instanceof Error ? err.message : 'Không tạo được bản quyền phần mềm.')
     } finally {
       setBusy(false)
     }
@@ -381,10 +382,10 @@ function LicenseForm({
     <div className="grid gap-4 sm:grid-cols-3">
       <label className="text-sm font-medium">Bắt đầu<input required type="date" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={startDate} onChange={(e) => setStartDate(e.target.value)} /></label>
       <label className="text-sm font-medium">Kết thúc<input type="date" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={endDate} onChange={(e) => setEndDate(e.target.value)} /></label>
-      <label className="text-sm font-medium">Seats<input type="number" min="1" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={seats} onChange={(e) => setSeats(e.target.value)} /></label>
+      <label className="text-sm font-medium">Số thiết bị được phép<input type="number" min="1" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={seats} onChange={(e) => setSeats(e.target.value)} /></label>
     </div>
-    <label className="block text-sm font-medium">Tài khoản/identifier<input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={account} onChange={(e) => setAccount(e.target.value)} placeholder="user@example.com" /></label>
-    <label className="block text-sm font-medium">Secret reference URI
+    <label className="block text-sm font-medium">Tài khoản định danh<input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={account} onChange={(e) => setAccount(e.target.value)} placeholder="user@example.com" /></label>
+    <label className="block text-sm font-medium">Đường dẫn tham chiếu bí mật
       <input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm" value={secretRef} onChange={(e) => setSecretRef(e.target.value)} placeholder="vault://hometechvn/licenses/..." />
       <span className="mt-1 block text-xs text-amber-300">Không dán product key, license key hoặc mật khẩu vào đây. Chỉ lưu URI tham chiếu tới kho bí mật.</span>
     </label>
@@ -393,7 +394,7 @@ function LicenseForm({
       <label className="mt-7 flex items-center gap-2 text-sm"><input type="checkbox" checked={autoRenew} onChange={(e) => setAutoRenew(e.target.checked)} /> Tự động gia hạn</label>
     </div>
     <label className="block text-sm font-medium">Ghi chú<textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} /></label>
-    <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy || !productId || !customerId} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">{busy ? 'Đang tạo…' : 'Tạo License'}</button></div>
+    <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy || !productId || !customerId} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">{busy ? 'Đang tạo…' : 'Tạo bản quyền'}</button></div>
     <ErrorPanel message={error} />
   </form>
 }
@@ -492,7 +493,7 @@ function LicenseEditForm({
       if (rpcError) throw rpcError
       onDone()
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không cập nhật được License.')
+      setError(err instanceof Error ? err.message : 'Không cập nhật được bản quyền phần mềm.')
     } finally {
       setBusy(false)
     }
@@ -503,17 +504,17 @@ function LicenseEditForm({
       <strong className="font-mono text-cyan-300">{row.license_code}</strong> · {row.product_name} · {row.customer_name}
     </div>
     <div className="grid gap-4 sm:grid-cols-2">
-      <label className="text-sm font-medium">Seats<input type="number" min="1" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={seats} onChange={(e) => setSeats(e.target.value)} /></label>
+      <label className="text-sm font-medium">Số thiết bị được phép<input type="number" min="1" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={seats} onChange={(e) => setSeats(e.target.value)} /></label>
       <label className="text-sm font-medium">Chi phí gia hạn<input type="number" min="0" step="1000" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={cost} onChange={(e) => setCost(e.target.value)} /></label>
     </div>
-    <label className="block text-sm font-medium">Tài khoản/identifier<input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={account} onChange={(e) => setAccount(e.target.value)} /></label>
-    <label className="block text-sm font-medium">Secret reference URI
+    <label className="block text-sm font-medium">Tài khoản định danh<input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={account} onChange={(e) => setAccount(e.target.value)} /></label>
+    <label className="block text-sm font-medium">Đường dẫn tham chiếu bí mật
       <input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 font-mono text-sm" value={secretRef} onChange={(e) => setSecretRef(e.target.value)} placeholder="vault://hometechvn/licenses/..." />
       <span className="mt-1 block text-xs text-amber-300">Không nhập key hoặc mật khẩu thật. Chỉ nhập URI tham chiếu tới kho bí mật.</span>
     </label>
     <label className="flex items-center gap-2 text-sm"><input type="checkbox" checked={autoRenew} onChange={(e) => setAutoRenew(e.target.checked)} /> Tự động gia hạn</label>
     <label className="block text-sm font-medium">Ghi chú<textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} /></label>
-    <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">{busy ? 'Đang lưu…' : 'Lưu License'}</button></div>
+    <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">{busy ? 'Đang lưu…' : 'Lưu bản quyền'}</button></div>
     <ErrorPanel message={error} />
   </form>
 }
@@ -653,22 +654,22 @@ export function ServiceLicensePage({
 
   async function licenseStatus(row: SoftwareLicenseSummaryRow, status: 'ACTIVE' | 'SUSPENDED' | 'EXPIRED' | 'CANCELLED') {
     if (!row.id) return
-    const reason = status === 'CANCELLED' ? window.prompt('Lý do hủy License:') : undefined
+    const reason = status === 'CANCELLED' ? window.prompt('Lý do hủy bản quyền:') : undefined
     if (status === 'CANCELLED' && !reason?.trim()) return
     const { error: rpcError } = await supabase.rpc('software_license_set_status', { p_license_id: row.id, p_status: status, p_reason: reason?.trim() || undefined })
     if (rpcError) setError(rpcError.message); else await load()
   }
 
   if (!canViewService && !canViewLicense) {
-    return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-200"><div className="rounded-2xl border border-amber-900 p-6">Vai trò hiện tại không có quyền Dịch vụ/License.</div></main>
+    return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-200"><div className="rounded-2xl border border-amber-900 p-6">Vai trò hiện tại không có quyền xem dịch vụ định kỳ hoặc bản quyền phần mềm.</div></main>
   }
 
   return <main className="min-h-screen bg-slate-950 text-slate-200">
     <header className="border-b border-slate-800 bg-slate-900/90 px-4 py-4 sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
-        <div><div className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN</div><h1 className="mt-1 text-xl font-bold text-white">Dịch vụ định kỳ & Software License</h1></div>
+        <div><div className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN</div><h1 className="mt-1 text-xl font-bold text-white">Dịch vụ định kỳ & Bản quyền phần mềm</h1></div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          {onOpenCrm ? <button onClick={onOpenCrm} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">CRM</button> : null}
+          {onOpenCrm ? <button onClick={onOpenCrm} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Khách hàng</button> : null}
           {onOpenWarranty ? <button onClick={onOpenWarranty} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Bảo hành</button> : null}
           <div className="px-2 text-right"><div className="font-medium text-white">{context.fullName || context.email || 'Người dùng'}</div><div className="text-xs text-slate-500">{context.roleName} · {context.roleCode}</div></div>
           <button onClick={() => void supabase.auth.signOut()} className="rounded-xl border border-slate-700 px-3 py-2">Đăng xuất</button>
@@ -681,15 +682,15 @@ export function ServiceLicensePage({
         <div className="flex flex-wrap gap-2">
           {canViewService ? <button onClick={() => setTab('schedules')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'schedules' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Lịch dịch vụ</button> : null}
           {canViewService ? <button onClick={() => setTab('services')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'services' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Danh mục dịch vụ</button> : null}
-          {canViewLicense ? <button onClick={() => setTab('licenses')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'licenses' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>License</button> : null}
+          {canViewLicense ? <button onClick={() => setTab('licenses')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'licenses' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Bản quyền</button> : null}
           {canViewLicense ? <button onClick={() => setTab('software')} className={`rounded-xl px-4 py-2 text-sm ${tab === 'software' ? 'bg-cyan-500 font-semibold text-slate-950' : 'border border-slate-700'}`}>Sản phẩm phần mềm</button> : null}
         </div>
         <div className="flex gap-2">
           <button onClick={() => void load()} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Làm mới</button>
-          {tab === 'schedules' && canManageService ? <button onClick={() => setShowSchedule(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Lịch dịch vụ</button> : null}
-          {tab === 'services' && canManageService ? <button onClick={() => setShowService(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Dịch vụ</button> : null}
-          {tab === 'licenses' && canManageLicense ? <button onClick={() => setShowLicense(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ License</button> : null}
-          {tab === 'software' && canManageLicense ? <button onClick={() => setShowProduct(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Sản phẩm</button> : null}
+          {tab === 'schedules' && canManageService ? <button onClick={() => setShowSchedule(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Tạo mới</button> : null}
+          {tab === 'services' && canManageService ? <button onClick={() => setShowService(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Tạo mới</button> : null}
+          {tab === 'licenses' && canManageLicense ? <button onClick={() => setShowLicense(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Tạo mới</button> : null}
+          {tab === 'software' && canManageLicense ? <button onClick={() => setShowProduct(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Tạo mới</button> : null}
         </div>
       </div>
 
@@ -698,25 +699,25 @@ export function ServiceLicensePage({
       {tab === 'schedules' && canViewService ? <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
         <div className="overflow-x-auto"><table className="w-full min-w-[1200px] text-left text-sm">
           <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Dịch vụ</th><th className="px-4 py-3">Khách / Thiết bị</th><th className="px-4 py-3">Chu kỳ</th><th className="px-4 py-3">Đến hạn</th><th className="px-4 py-3">Đã làm</th><th className="px-4 py-3">Giá</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
-          <tbody>{schedules.map((r) => r.id ? <tr key={r.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{r.service_name}</div><div className="text-xs text-slate-500">{r.category}</div></td><td className="px-4 py-3"><div>{r.customer_name}</div><div className="text-xs text-slate-500">{r.customer_code} · {r.device_code ?? 'Không gắn thiết bị'}</div></td><td className="px-4 py-3">{r.interval_count} {r.interval_unit}</td><td className="px-4 py-3 font-medium text-amber-300">{date(r.next_due_date)}</td><td className="px-4 py-3">{r.completion_count ?? 0}<div className="text-xs text-slate-500">{dateTime(r.last_completed_at)}</div></td><td className="px-4 py-3">{money(r.price)}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(r.status)}`}>{r.status}</span></td><td className="px-4 py-3 text-right">{canManageService ? <div className="flex flex-wrap justify-end gap-1">{!['CANCELLED','COMPLETED'].includes(r.status ?? '') ? <button onClick={() => setEditingSchedule(r)} className="rounded-lg border border-slate-700 px-2 py-1 text-xs">Sửa</button> : null}{r.status === 'ACTIVE' ? <><button onClick={() => void completeSchedule(r.id!)} className="rounded-lg border border-emerald-800 px-2 py-1 text-xs text-emerald-300">Hoàn thành lần này</button><button onClick={() => void scheduleStatus(r.id!,'PAUSED')} className="rounded-lg border border-amber-800 px-2 py-1 text-xs text-amber-300">Tạm dừng</button></> : null}{r.status === 'PAUSED' ? <button onClick={() => void scheduleStatus(r.id!,'ACTIVE')} className="rounded-lg border border-emerald-800 px-2 py-1 text-xs text-emerald-300">Tiếp tục</button> : null}{r.last_completion_id && canManageWarranty ? <button onClick={() => void createServiceWarranty(r)} className="rounded-lg border border-cyan-800 px-2 py-1 text-xs text-cyan-300">Tạo BH</button> : null}{!['CANCELLED','COMPLETED'].includes(r.status ?? '') ? <button onClick={() => void scheduleStatus(r.id!,'CANCELLED')} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Hủy</button> : null}</div> : '—'}</td></tr> : null)}</tbody>
+          <tbody>{schedules.map((r) => r.id ? <tr key={r.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{r.service_name}</div><div className="text-xs text-slate-500">{r.category}</div></td><td className="px-4 py-3"><div>{r.customer_name}</div><div className="text-xs text-slate-500">{r.customer_code} · {r.device_code ?? 'Không gắn thiết bị'}</div></td><td className="px-4 py-3">{r.interval_count} {viIntervalUnit(r.interval_unit)}</td><td className="px-4 py-3 font-medium text-amber-300">{date(r.next_due_date)}</td><td className="px-4 py-3">{r.completion_count ?? 0}<div className="text-xs text-slate-500">{dateTime(r.last_completed_at)}</div></td><td className="px-4 py-3">{money(r.price)}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(r.status)}`}>{viStatus(r.status)}</span></td><td className="px-4 py-3 text-right">{canManageService ? <div className="flex flex-wrap justify-end gap-1">{!['CANCELLED','COMPLETED'].includes(r.status ?? '') ? <button onClick={() => setEditingSchedule(r)} className="rounded-lg border border-slate-700 px-2 py-1 text-xs">Sửa</button> : null}{r.status === 'ACTIVE' ? <><button onClick={() => void completeSchedule(r.id!)} className="rounded-lg border border-emerald-800 px-2 py-1 text-xs text-emerald-300">Hoàn thành lần này</button><button onClick={() => void scheduleStatus(r.id!,'PAUSED')} className="rounded-lg border border-amber-800 px-2 py-1 text-xs text-amber-300">Tạm dừng</button></> : null}{r.status === 'PAUSED' ? <button onClick={() => void scheduleStatus(r.id!,'ACTIVE')} className="rounded-lg border border-emerald-800 px-2 py-1 text-xs text-emerald-300">Tiếp tục</button> : null}{r.last_completion_id && canManageWarranty ? <button onClick={() => void createServiceWarranty(r)} className="rounded-lg border border-cyan-800 px-2 py-1 text-xs text-cyan-300">Tạo BH</button> : null}{!['CANCELLED','COMPLETED'].includes(r.status ?? '') ? <button onClick={() => void scheduleStatus(r.id!,'CANCELLED')} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Hủy</button> : null}</div> : '—'}</td></tr> : null)}</tbody>
         </table></div>
         {schedules.length === 0 ? <p className="p-8 text-center text-slate-500">Chưa có lịch dịch vụ.</p> : null}
       </section> : null}
 
       {tab === 'services' && canViewService ? <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-        <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Dịch vụ</th><th className="px-4 py-3">Chu kỳ</th><th className="px-4 py-3">Giá</th><th className="px-4 py-3">Bảo hành</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>{services.map((s) => <tr key={s.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{s.name}</div><div className="text-xs text-slate-500">{s.category} · {s.description ?? ''}</div></td><td className="px-4 py-3">{s.default_interval_count} {s.default_interval_unit}</td><td className="px-4 py-3">{money(s.default_price)}</td><td className="px-4 py-3">{s.warranty_months} tháng</td><td className="px-4 py-3">{s.is_active ? <span className="text-emerald-300">ACTIVE</span> : <span className="text-slate-500">INACTIVE</span>}</td><td className="px-4 py-3 text-right">{canManageService ? <button onClick={() => setEditingService(s)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs">Sửa</button> : '—'}</td></tr>)}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full min-w-[760px] text-left text-sm"><thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Dịch vụ</th><th className="px-4 py-3">Chu kỳ</th><th className="px-4 py-3">Giá</th><th className="px-4 py-3">Bảo hành</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>{services.map((s) => <tr key={s.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{s.name}</div><div className="text-xs text-slate-500">{s.category} · {s.description ?? ''}</div></td><td className="px-4 py-3">{s.default_interval_count} {viIntervalUnit(s.default_interval_unit)}</td><td className="px-4 py-3">{money(s.default_price)}</td><td className="px-4 py-3">{s.warranty_months} tháng</td><td className="px-4 py-3">{s.is_active ? <span className="text-emerald-300">Đang hoạt động</span> : <span className="text-slate-500">Ngừng hoạt động</span>}</td><td className="px-4 py-3 text-right">{canManageService ? <button onClick={() => setEditingService(s)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs">Sửa</button> : '—'}</td></tr>)}</tbody></table></div>
       </section> : null}
 
       {tab === 'licenses' && canViewLicense ? <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
         <div className="overflow-x-auto"><table className="w-full min-w-[1250px] text-left text-sm">
-          <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">License</th><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">Khách hàng</th><th className="px-4 py-3">Thời hạn</th><th className="px-4 py-3">Seats</th><th className="px-4 py-3">Secret ref</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
-          <tbody>{licenses.map((l) => l.id ? <tr key={l.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-mono text-cyan-300">{l.license_code}</div><div className="text-xs text-slate-500">{l.account_identifier ?? '—'}</div></td><td className="px-4 py-3"><div>{l.vendor} {l.product_name}</div><div className="text-xs text-slate-500">{l.category} · {l.edition ?? ''}</div></td><td className="px-4 py-3">{l.customer_name}<div className="text-xs text-slate-500">{l.customer_code} · {l.device_code ?? '—'}</div></td><td className="px-4 py-3">{date(l.start_date)} → {date(l.end_date)}<div className="text-xs text-slate-500">Gia hạn: {money(l.renewal_cost)}</div></td><td className="px-4 py-3">{l.seats}</td><td className="max-w-56 truncate px-4 py-3 font-mono text-xs text-slate-400" title={l.secret_ref ?? ''}>{l.secret_ref ?? '—'}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(l.status)}`}>{l.status}</span></td><td className="px-4 py-3 text-right">{canManageLicense ? <div className="flex flex-wrap justify-end gap-1">{l.status !== 'CANCELLED' ? <button onClick={() => setEditingLicense(l)} className="rounded-lg border border-slate-700 px-2 py-1 text-xs">Sửa</button> : null}{l.status !== 'CANCELLED' ? <button onClick={() => void renewLicense(l)} className="rounded-lg border border-cyan-800 px-2 py-1 text-xs text-cyan-300">Gia hạn</button> : null}{l.status === 'ACTIVE' ? <button onClick={() => void licenseStatus(l,'SUSPENDED')} className="rounded-lg border border-amber-800 px-2 py-1 text-xs text-amber-300">Suspend</button> : null}{l.status === 'SUSPENDED' || l.status === 'EXPIRED' ? <button onClick={() => void licenseStatus(l,'ACTIVE')} className="rounded-lg border border-emerald-800 px-2 py-1 text-xs text-emerald-300">Activate</button> : null}{l.status !== 'CANCELLED' ? <button onClick={() => void licenseStatus(l,'CANCELLED')} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Hủy</button> : null}</div> : '—'}</td></tr> : null)}</tbody>
+          <thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Bản quyền</th><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">Khách hàng</th><th className="px-4 py-3">Thời hạn</th><th className="px-4 py-3">Số máy</th><th className="px-4 py-3">Tham chiếu bí mật</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Thao tác</th></tr></thead>
+          <tbody>{licenses.map((l) => l.id ? <tr key={l.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-mono text-cyan-300">{l.license_code}</div><div className="text-xs text-slate-500">{l.account_identifier ?? '—'}</div></td><td className="px-4 py-3"><div>{l.vendor} {l.product_name}</div><div className="text-xs text-slate-500">{l.category} · {l.edition ?? ''}</div></td><td className="px-4 py-3">{l.customer_name}<div className="text-xs text-slate-500">{l.customer_code} · {l.device_code ?? '—'}</div></td><td className="px-4 py-3">{date(l.start_date)} → {date(l.end_date)}<div className="text-xs text-slate-500">Gia hạn: {money(l.renewal_cost)}</div></td><td className="px-4 py-3">{l.seats}</td><td className="max-w-56 truncate px-4 py-3 font-mono text-xs text-slate-400" title={l.secret_ref ?? ''}>{l.secret_ref ?? '—'}</td><td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(l.status)}`}>{viStatus(l.status)}</span></td><td className="px-4 py-3 text-right">{canManageLicense ? <div className="flex flex-wrap justify-end gap-1">{l.status !== 'CANCELLED' ? <button onClick={() => setEditingLicense(l)} className="rounded-lg border border-slate-700 px-2 py-1 text-xs">Sửa</button> : null}{l.status !== 'CANCELLED' ? <button onClick={() => void renewLicense(l)} className="rounded-lg border border-cyan-800 px-2 py-1 text-xs text-cyan-300">Gia hạn</button> : null}{l.status === 'ACTIVE' ? <button onClick={() => void licenseStatus(l,'SUSPENDED')} className="rounded-lg border border-amber-800 px-2 py-1 text-xs text-amber-300">Tạm dừng</button> : null}{l.status === 'SUSPENDED' || l.status === 'EXPIRED' ? <button onClick={() => void licenseStatus(l,'ACTIVE')} className="rounded-lg border border-emerald-800 px-2 py-1 text-xs text-emerald-300">Kích hoạt</button> : null}{l.status !== 'CANCELLED' ? <button onClick={() => void licenseStatus(l,'CANCELLED')} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Hủy</button> : null}</div> : '—'}</td></tr> : null)}</tbody>
         </table></div>
-        {licenses.length === 0 ? <p className="p-8 text-center text-slate-500">Chưa có License.</p> : null}
+        {licenses.length === 0 ? <p className="p-8 text-center text-slate-500">Chưa có bản quyền phần mềm.</p> : null}
       </section> : null}
 
       {tab === 'software' && canViewLicense ? <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-        <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">Nhóm</th><th className="px-4 py-3">Billing</th><th className="px-4 py-3">Term</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>{products.map((p) => <tr key={p.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{p.vendor ? `${p.vendor} · ` : ''}{p.name}</div><div className="text-xs text-slate-500">{p.edition ?? ''} · {p.description ?? ''}</div></td><td className="px-4 py-3">{p.category}</td><td className="px-4 py-3">{p.billing_model}</td><td className="px-4 py-3">{p.default_term_months ? `${p.default_term_months} tháng` : '—'}</td><td className="px-4 py-3">{p.is_active ? <span className="text-emerald-300">ACTIVE</span> : <span className="text-slate-500">INACTIVE</span>}</td><td className="px-4 py-3 text-right">{canManageLicense ? <button onClick={() => setEditingProduct(p)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs">Sửa</button> : '—'}</td></tr>)}</tbody></table></div>
+        <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">Nhóm</th><th className="px-4 py-3">Thanh toán</th><th className="px-4 py-3">Thời hạn</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>{products.map((p) => <tr key={p.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{p.vendor ? `${p.vendor} · ` : ''}{p.name}</div><div className="text-xs text-slate-500">{p.edition ?? ''} · {p.description ?? ''}</div></td><td className="px-4 py-3">{p.category}</td><td className="px-4 py-3">{viBillingModel(p.billing_model)}</td><td className="px-4 py-3">{p.default_term_months ? `${p.default_term_months} tháng` : '—'}</td><td className="px-4 py-3">{p.is_active ? <span className="text-emerald-300">Đang hoạt động</span> : <span className="text-slate-500">Ngừng hoạt động</span>}</td><td className="px-4 py-3 text-right">{canManageLicense ? <button onClick={() => setEditingProduct(p)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs">Sửa</button> : '—'}</td></tr>)}</tbody></table></div>
       </section> : null}
 
     </div>
@@ -727,7 +728,7 @@ export function ServiceLicensePage({
     {editingSchedule ? <Modal title="Sửa lịch dịch vụ" onClose={() => setEditingSchedule(null)}><ScheduleEditForm row={editingSchedule} onCancel={() => setEditingSchedule(null)} onDone={() => { setEditingSchedule(null); void load() }} /></Modal> : null}
     {showProduct ? <Modal title="Tạo sản phẩm phần mềm" onClose={() => setShowProduct(false)}><SoftwareProductForm onCancel={() => setShowProduct(false)} onDone={() => { setShowProduct(false); void load() }} /></Modal> : null}
     {editingProduct ? <Modal title="Sửa sản phẩm phần mềm" onClose={() => setEditingProduct(null)}><SoftwareProductForm initial={editingProduct} onCancel={() => setEditingProduct(null)} onDone={() => { setEditingProduct(null); void load() }} /></Modal> : null}
-    {showLicense ? <Modal title="Tạo License" onClose={() => setShowLicense(false)}><LicenseForm products={products} customers={customers} devices={devices} canCreateCustomer={hasPermission(context, 'customer.create')} canCreateDevice={hasPermission(context, 'device.create')} onCancel={() => setShowLicense(false)} onDone={() => { setShowLicense(false); void load() }} /></Modal> : null}
-    {editingLicense ? <Modal title="Sửa License" onClose={() => setEditingLicense(null)}><LicenseEditForm row={editingLicense} onCancel={() => setEditingLicense(null)} onDone={() => { setEditingLicense(null); void load() }} /></Modal> : null}
+    {showLicense ? <Modal title="Tạo bản quyền phần mềm" onClose={() => setShowLicense(false)}><LicenseForm products={products} customers={customers} devices={devices} canCreateCustomer={hasPermission(context, 'customer.create')} canCreateDevice={hasPermission(context, 'device.create')} onCancel={() => setShowLicense(false)} onDone={() => { setShowLicense(false); void load() }} /></Modal> : null}
+    {editingLicense ? <Modal title="Sửa bản quyền phần mềm" onClose={() => setEditingLicense(null)}><LicenseEditForm row={editingLicense} onCancel={() => setEditingLicense(null)} onDone={() => { setEditingLicense(null); void load() }} /></Modal> : null}
   </main>
 }

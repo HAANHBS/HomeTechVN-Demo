@@ -11,8 +11,8 @@ export function DemoModeBanner() {
       aria-label={hostedDemo ? 'Môi trường demo trực tuyến' : 'Môi trường demo cục bộ'}
     >
       {hostedDemo
-        ? 'HOSTED DEMO · DỮ LIỆU HOÀN TOÀN GIẢ ĐỊNH'
-        : 'LOCAL DEMO · KHÔNG DÙNG DỮ LIỆU THẬT'}
+        ? 'BẢN TRÌNH DIỄN TRỰC TUYẾN · DỮ LIỆU HOÀN TOÀN GIẢ ĐỊNH'
+        : 'BẢN TRÌNH DIỄN CỤC BỘ · KHÔNG DÙNG DỮ LIỆU THẬT'}
     </div>
   )
 }

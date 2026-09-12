@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
 import type { AppUserContext } from '../../lib/permissions'
 import { supabase } from '../../lib/supabase'
+import { viPriority, viStatus } from '../../lib/vi'
 
 type NumberMap = Record<string, number | null>
 
@@ -131,7 +132,7 @@ function StatusBars({ rows }: { rows: DashboardSnapshot['charts']['repair_status
   const max = Math.max(1, ...rows.map((x) => Number(x.count || 0)))
   return <div className="space-y-3">
     {rows.length ? rows.map((row) => <div key={row.status}>
-      <div className="mb-1 flex items-center justify-between gap-3 text-xs"><span className="text-slate-300">{row.status}</span><strong className="text-white">{number(row.count)}</strong></div>
+      <div className="mb-1 flex items-center justify-between gap-3 text-xs"><span className="text-slate-300">{viStatus(row.status)}</span><strong className="text-white">{number(row.count)}</strong></div>
       <div className="h-2 overflow-hidden rounded-full bg-slate-800"><div className="h-full rounded-full bg-cyan-500" style={{ width: `${Math.max(4, (row.count / max) * 100)}%` }} /></div>
     </div>) : <p className="py-6 text-center text-sm text-slate-500">Không có phiếu sửa chữa đang mở.</p>}
   </div>
@@ -150,6 +151,7 @@ export function DashboardPage({
   onOpenNotifications,
   onOpenReports,
   onOpenAudit,
+  onOpenStaff,
 }: {
   context: AppUserContext
   onOpenCrm?: () => void
@@ -163,6 +165,7 @@ export function DashboardPage({
   onOpenNotifications?: () => void
   onOpenReports?: () => void
   onOpenAudit?: () => void
+  onOpenStaff?: () => void
 }) {
   const [days, setDays] = useState<7 | 30 | 90>(30)
   const [data, setData] = useState<DashboardSnapshot | null>(null)
@@ -177,7 +180,7 @@ export function DashboardPage({
       if (rpcError) throw rpcError
       setData(result as unknown as DashboardSnapshot)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không tải được Dashboard.')
+      setError(err instanceof Error ? err.message : 'Không tải được dữ liệu Tổng quan.')
     } finally {
       setLoading(false)
     }
@@ -190,14 +193,15 @@ export function DashboardPage({
     { key: 'inventory', label: 'Sản phẩm & kho', short: 'Kho', enabled: Boolean(onOpenInventory), onClick: onOpenInventory },
     { key: 'sales', label: 'Bán hàng', short: 'Bán hàng', enabled: Boolean(onOpenSales), onClick: onOpenSales },
     { key: 'repair', label: 'Sửa chữa', short: 'Sửa chữa', enabled: Boolean(onOpenRepair), onClick: onOpenRepair },
-    { key: 'checklist', label: 'Checklist', short: 'Checklist', enabled: Boolean(onOpenChecklist), onClick: onOpenChecklist },
+    { key: 'checklist', label: 'Danh sách kiểm tra', short: 'Kiểm tra', enabled: Boolean(onOpenChecklist), onClick: onOpenChecklist },
     { key: 'warranty', label: 'Bảo hành', short: 'Bảo hành', enabled: Boolean(onOpenWarranty), onClick: onOpenWarranty },
-    { key: 'service', label: 'Dịch vụ & License', short: 'Dịch vụ', enabled: Boolean(onOpenServiceLicense), onClick: onOpenServiceLicense },
+    { key: 'service', label: 'Dịch vụ & bản quyền', short: 'Dịch vụ', enabled: Boolean(onOpenServiceLicense), onClick: onOpenServiceLicense },
     { key: 'reminder', label: 'Nhắc việc', short: 'Nhắc việc', enabled: Boolean(onOpenReminders), onClick: onOpenReminders },
     { key: 'notification', label: 'Thông báo', short: 'Thông báo', enabled: Boolean(onOpenNotifications), onClick: onOpenNotifications },
     { key: 'reports', label: 'Báo cáo', short: 'Báo cáo', enabled: Boolean(onOpenReports), onClick: onOpenReports },
-    { key: 'audit', label: 'Bảo mật & Audit', short: 'Audit', enabled: Boolean(onOpenAudit), onClick: onOpenAudit },
-  ].filter((x) => x.enabled), [onOpenAudit, onOpenChecklist, onOpenCrm, onOpenInventory, onOpenNotifications, onOpenReminders, onOpenRepair, onOpenReports, onOpenSales, onOpenServiceLicense, onOpenWarranty])
+    { key: 'audit', label: 'Bảo mật & nhật ký', short: 'Nhật ký', enabled: Boolean(onOpenAudit), onClick: onOpenAudit },
+    { key: 'staff', label: 'Nhân viên & phân quyền', short: 'Nhân viên', enabled: Boolean(onOpenStaff), onClick: onOpenStaff },
+  ].filter((x) => x.enabled), [onOpenAudit, onOpenChecklist, onOpenCrm, onOpenInventory, onOpenNotifications, onOpenReminders, onOpenRepair, onOpenReports, onOpenSales, onOpenServiceLicense, onOpenStaff, onOpenWarranty])
 
   const sales = data?.kpis.sales
   const repairs = data?.kpis.repairs
@@ -252,7 +256,7 @@ export function DashboardPage({
           {inventory ? <KpiCard label="Tồn thấp" value={number(inventory.low_stock)} note={`${number(inventory.out_of_stock)} hết hàng`} tone={Number(inventory.low_stock) > 0 ? 'amber' : 'slate'} onClick={onOpenInventory} /> : null}
           {warranty ? <KpiCard label="BH sắp hết 7 ngày" value={number(warranty.expiring_7d)} note={`${number(warranty.expiring_30d)} trong 30 ngày`} tone="slate" onClick={onOpenWarranty} /> : null}
           {service ? <KpiCard label="Dịch vụ đến hạn 7 ngày" value={number(service.due_7d)} note={`${number(service.overdue)} quá hạn`} tone={Number(service.overdue) > 0 ? 'amber' : 'slate'} onClick={onOpenServiceLicense} /> : null}
-          {license ? <KpiCard label="License hết hạn 7 ngày" value={number(license.expiring_7d)} note={`${number(license.expiring_30d)} trong 30 ngày`} tone="slate" onClick={onOpenServiceLicense} /> : null}
+          {license ? <KpiCard label="Bản quyền hết hạn 7 ngày" value={number(license.expiring_7d)} note={`${number(license.expiring_30d)} trong 30 ngày`} tone="slate" onClick={onOpenServiceLicense} /> : null}
           {sales ? <KpiCard label="Công nợ bán hàng" value={money(sales.balance_due)} note={`${number(sales.payment_pending_orders)} đơn chờ thu`} tone={Number(sales.balance_due) > 0 ? 'amber' : 'slate'} onClick={onOpenSales} /> : null}
         </section>
 
@@ -267,11 +271,11 @@ export function DashboardPage({
           </SectionCard> : null}
 
           {repairs ? <SectionCard title="Sửa chữa cần chú ý" subtitle="Ưu tiên quá hạn, READY, chờ khách">
-            <div className="space-y-2">{data.attention.repairs.length ? data.attention.repairs.map((row) => <button type="button" onClick={onOpenRepair} key={row.id} className="w-full rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-left hover:border-cyan-800"><div className="flex items-start justify-between gap-2"><div><div className="font-mono text-xs text-cyan-400">{row.repair_code}</div><div className="mt-1 text-sm font-medium text-white">{row.customer_name || 'Khách hàng'}</div></div><span className="rounded-lg bg-slate-800 px-2 py-1 text-[10px] text-slate-300">{row.status}</span></div><div className="mt-2 text-xs text-slate-500">Dự kiến: {dateTime(row.estimated_completion_at)}</div></button>) : <p className="py-8 text-center text-sm text-emerald-400">Không có phiếu sửa chữa cần cảnh báo.</p>}</div>
+            <div className="space-y-2">{data.attention.repairs.length ? data.attention.repairs.map((row) => <button type="button" onClick={onOpenRepair} key={row.id} className="w-full rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-left hover:border-cyan-800"><div className="flex items-start justify-between gap-2"><div><div className="font-mono text-xs text-cyan-400">{row.repair_code}</div><div className="mt-1 text-sm font-medium text-white">{row.customer_name || 'Khách hàng'}</div></div><span title={row.status} className="rounded-lg bg-slate-800 px-2 py-1 text-[10px] text-slate-300">{viStatus(row.status)}</span></div><div className="mt-2 text-xs text-slate-500">Dự kiến: {dateTime(row.estimated_completion_at)}</div></button>) : <p className="py-8 text-center text-sm text-emerald-400">Không có phiếu sửa chữa cần cảnh báo.</p>}</div>
           </SectionCard> : null}
 
           {reminders ? <SectionCard title="Nhắc việc đến hạn" subtitle="Tối đa 8 mục ưu tiên cao nhất">
-            <div className="space-y-2">{data.attention.reminders.length ? data.attention.reminders.map((row) => <button type="button" onClick={onOpenReminders} key={row.id} className="w-full rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-left hover:border-violet-800"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="font-mono text-xs text-violet-300">{row.reminder_code}</div><div className="mt-1 truncate text-sm font-medium text-white">{row.title}</div></div><span className={`rounded-lg px-2 py-1 text-[10px] ${row.priority === 'URGENT' ? 'bg-red-950 text-red-300' : row.priority === 'HIGH' ? 'bg-amber-950 text-amber-300' : 'bg-slate-800 text-slate-300'}`}>{row.priority}</span></div><div className="mt-2 text-xs text-slate-500">{row.source_type} · {row.source_label ?? '—'} · {dateTime(row.due_at)}</div></button>) : <p className="py-8 text-center text-sm text-emerald-400">Không có reminder đang DUE.</p>}</div>
+            <div className="space-y-2">{data.attention.reminders.length ? data.attention.reminders.map((row) => <button type="button" onClick={onOpenReminders} key={row.id} className="w-full rounded-xl border border-slate-800 bg-slate-950/60 p-3 text-left hover:border-violet-800"><div className="flex items-start justify-between gap-2"><div className="min-w-0"><div className="font-mono text-xs text-violet-300">{row.reminder_code}</div><div className="mt-1 truncate text-sm font-medium text-white">{row.title}</div></div><span title={row.priority} className={`rounded-lg px-2 py-1 text-[10px] ${row.priority === 'URGENT' ? 'bg-red-950 text-red-300' : row.priority === 'HIGH' ? 'bg-amber-950 text-amber-300' : 'bg-slate-800 text-slate-300'}`}>{viPriority(row.priority)}</span></div><div className="mt-2 text-xs text-slate-500">{row.source_type} · {row.source_label ?? '—'} · {dateTime(row.due_at)}</div></button>) : <p className="py-8 text-center text-sm text-emerald-400">Không có nhắc việc đang đến hạn.</p>}</div>
           </SectionCard> : null}
         </section>
 
@@ -280,7 +284,7 @@ export function DashboardPage({
         </SectionCard> : null}
 
         <div className="flex flex-wrap items-center justify-between gap-2 px-1 text-[11px] text-slate-600"><span>Cập nhật: {dateTime(data.generated_at)}</span><span>KPI được lọc theo quyền của tài khoản hiện tại.</span></div>
-      </> : loading ? <div className="grid min-h-80 place-items-center rounded-3xl border border-slate-800 bg-slate-900"><div className="text-slate-400">Đang tổng hợp Dashboard…</div></div> : null}
+      </> : loading ? <div className="grid min-h-80 place-items-center rounded-3xl border border-slate-800 bg-slate-900"><div className="text-slate-400">Đang tổng hợp dữ liệu Tổng quan…</div></div> : null}
     </div>
   </main>
 }

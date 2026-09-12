@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react'
 import type { AppUserContext } from '../../lib/permissions'
 import { supabase } from '../../lib/supabase'
+import { viStatus } from '../../lib/vi'
 
 type NumberMap = Record<string, number | null>
 
@@ -457,9 +458,9 @@ export function ReportsPage({
 
                 <section className="grid grid-cols-2 gap-3 sm:grid-cols-3 xl:grid-cols-6">
                   {inventory ? <Card label="Tồn thấp" value={number(inventory.low_stock)} note={`${number(inventory.out_of_stock)} hết hàng`} tone={Number(inventory.low_stock) > 0 ? 'amber' : 'slate'} /> : null}
-                  {warranty ? <Card label="Claim bảo hành" value={number(warranty.claims_received)} note={`${number(warranty.claims_closed)} claim đóng trong kỳ`} /> : null}
+                  {warranty ? <Card label="Yêu cầu bảo hành" value={number(warranty.claims_received)} note={`${number(warranty.claims_closed)} yêu cầu đã đóng trong kỳ`} /> : null}
                   {service ? <Card label="Dịch vụ quá hạn" value={number(service.overdue_current)} note={`${number(service.due_30d)} đến hạn 30 ngày`} tone={Number(service.overdue_current) > 0 ? 'amber' : 'slate'} /> : null}
-                  {license ? <Card label="License sắp hết" value={number(license.expiring_30d)} note={`Exposure gia hạn ${money(license.renewal_cost_exposure)}`} /> : null}
+                  {license ? <Card label="Bản quyền sắp hết" value={number(license.expiring_30d)} note={`Chi phí gia hạn dự kiến ${money(license.renewal_cost_exposure)}`} /> : null}
                   {repairs ? <Card label="Sửa chữa quá hạn" value={number(repairs.current_overdue)} note={`${number(repairs.current_ready)} READY`} tone={Number(repairs.current_overdue) > 0 ? 'red' : 'slate'} /> : null}
                   {inventory ? <Card label="Xuất kho trong kỳ" value={number(inventory.movement_out_qty)} note={`Nhập/hoàn ${number(inventory.movement_in_qty)}`} /> : null}
                 </section>
@@ -567,11 +568,11 @@ export function ReportsPage({
                     </div>
                   </Section>
 
-                  <Section title="Warranty Claim theo trạng thái">
+                  <Section title="Yêu cầu bảo hành theo trạng thái">
                     <div className="overflow-x-auto">
                       <table className="w-full min-w-[520px] text-left text-sm">
-                        <thead className="text-xs uppercase text-slate-500"><tr><th className="px-3 py-2">Trạng thái</th><th className="px-3 py-2 text-right">Số claim</th></tr></thead>
-                        <tbody>{data.charts.warranty_claim_status.map((row) => <tr key={row.status} className="border-t border-slate-800"><td className="px-3 py-3">{row.status}</td><td className="px-3 py-3 text-right">{number(row.count)}</td></tr>)}</tbody>
+                        <thead className="text-xs uppercase text-slate-500"><tr><th className="px-3 py-2">Trạng thái</th><th className="px-3 py-2 text-right">Số yêu cầu</th></tr></thead>
+                        <tbody>{data.charts.warranty_claim_status.map((row) => <tr key={row.status} className="border-t border-slate-800"><td className="px-3 py-3">{viStatus(row.status)}</td><td className="px-3 py-3 text-right">{number(row.count)}</td></tr>)}</tbody>
                       </table>
                     </div>
                   </Section>

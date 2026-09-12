@@ -15,6 +15,7 @@ import { Modal } from '../crm/forms'
 import { CreateOrderForm, EditOrderForm, ItemForm, PaymentForm, TextActionForm } from './forms'
 import type { QrAction, QrResolved } from '../qr/QrCommandCenter'
 import { WorkflowGuide, type WorkflowBlocker, type WorkflowGuideStep } from '../../components/WorkflowGuide'
+import { viPaymentMethod, viStatus } from '../../lib/vi'
 
 function money(value: number | null | undefined) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value ?? 0)
@@ -89,17 +90,17 @@ function OrderList({
       <input className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2" placeholder="Tìm mã đơn, khách hàng, điện thoại…" value={search} onChange={(e) => setSearch(e.target.value)} />
       <select className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={status} onChange={(e) => setStatus(e.target.value)}>
         <option value="ALL">Tất cả trạng thái</option>
-        {['DRAFT','CONFIRMED','PAYMENT_PENDING','PAID','DELIVERED','COMPLETED','CANCELLED'].map((x) => <option key={x} value={x}>{x}</option>)}
+        {['DRAFT','CONFIRMED','PAYMENT_PENDING','PAID','DELIVERED','COMPLETED','CANCELLED'].map((x) => <option key={x} value={x}>{viStatus(x)}</option>)}
       </select>
-      <button type="button" onClick={() => void load()} className="rounded-xl border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800">Làm mới</button>
-      {canCreate ? <button type="button" onClick={() => setShowCreate(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Đơn bán</button> : null}
+      <button type="button" onClick={() => { setSearch(''); setStatus('ALL'); void load() }} className="rounded-xl border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800">Đặt lại</button>
+      {canCreate ? <button type="button" onClick={() => setShowCreate(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Tạo mới</button> : null}
     </div>
 
     <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
       <div className="overflow-x-auto">
         <table className="w-full min-w-[1180px] text-left text-sm">
           <thead className="bg-slate-950/70 text-xs uppercase text-slate-500"><tr>
-            <th className="px-4 py-3">Đơn</th><th className="px-4 py-3">Khách hàng</th><th className="px-4 py-3">Tổng</th><th className="px-4 py-3">Đã thu / Còn</th><th className="px-4 py-3">Checklist</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3">Thời gian</th><th className="px-4 py-3 text-right">Mở</th>
+            <th className="px-4 py-3">Đơn</th><th className="px-4 py-3">Khách hàng</th><th className="px-4 py-3">Tổng</th><th className="px-4 py-3">Đã thu / Còn</th><th className="px-4 py-3">Kiểm tra</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3">Thời gian</th><th className="px-4 py-3 text-right">Mở</th>
           </tr></thead>
           <tbody>{filtered.map((r) => r.id ? (
             <tr key={r.id} className="border-t border-slate-800 hover:bg-slate-800/35">
@@ -108,7 +109,7 @@ function OrderList({
               <td className="px-4 py-3 font-semibold">{money(r.total_amount)}</td>
               <td className="px-4 py-3"><div className="text-emerald-300">{money(r.paid_amount)}</div><div className="text-xs text-amber-300">Còn {money(r.balance_due)}</div></td>
               <td className="px-4 py-3">{r.required_checked_count ?? 0}/{r.required_checklist_count ?? 0}</td>
-              <td className="px-4 py-3"><span className={`rounded-lg px-2 py-1 text-xs ${statusClass(r.status)}`}>{r.status}</span></td>
+              <td className="px-4 py-3"><span title={r.status ?? undefined} className={`rounded-lg px-2 py-1 text-xs ${statusClass(r.status)}`}>{viStatus(r.status)}</span></td>
               <td className="px-4 py-3 text-slate-400">{dateTime(r.created_at)}</td>
               <td className="px-4 py-3 text-right"><button type="button" onClick={() => onOpen(r.id!)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs hover:bg-slate-800">Chi tiết</button></td>
             </tr>
@@ -186,8 +187,8 @@ function OrderDetail({
     if (!order) return []
     const customerConfirmed = checklist.find((item) => item.key === 'customer_delivery_confirmation')?.checked === true
     return [
-      { label: 'Lập đơn và thêm hàng', done: items.length > 0, detail: items.length ? `${items.length} dòng hàng` : 'Chưa có dòng hàng' },
-      { label: 'Xác nhận và xuất kho', done: Boolean(order.confirmed_at), detail: order.confirmed_at ? dateTime(order.confirmed_at) : 'Bộ phận bán hàng' },
+      { label: 'Lập đơn và thêm hàng', done: items.length > 0, detail: items.length ? `${items.length} mặt hàng` : 'Chưa có hàng trong đơn' },
+      { label: 'Xác nhận đơn', done: Boolean(order.confirmed_at), detail: order.confirmed_at ? dateTime(order.confirmed_at) : 'Hệ thống tự trừ kho khi xác nhận' },
       { label: 'Thu đủ tiền', done: paymentMatches && Boolean(order.paid_at), detail: `${money(order.paid_amount)} / ${money(order.total_amount)}` },
       { label: 'Kiểm tra trước bàn giao', done: missingPreHandover.length === 0 && Boolean(order.confirmed_at), detail: `${preHandoverChecklist.length - missingPreHandover.length}/${preHandoverChecklist.length} mục` },
       { label: 'Bàn giao cho khách', done: Boolean(order.delivered_at), detail: order.delivered_at ? dateTime(order.delivered_at) : 'Chỉ mở khi các bước trước đã xong' },
@@ -248,7 +249,7 @@ function OrderDetail({
   return <div className="space-y-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <div><button type="button" onClick={onBack} className="text-sm text-cyan-300 hover:underline">← Danh sách đơn</button><h2 className="mt-2 font-mono text-2xl font-bold text-white">{order.order_code}</h2><p className="text-sm text-slate-500">{customer?.full_name ?? order.customer_id} · {customer?.phone || '—'}</p></div>
-      <span className={`rounded-xl px-3 py-2 text-sm font-semibold ${statusClass(order.status)}`}>{order.status}</span>
+      <span title={order.status} className={`rounded-xl px-3 py-2 text-sm font-semibold ${statusClass(order.status)}`}>{viStatus(order.status)}</span>
     </div>
 
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
@@ -261,11 +262,11 @@ function OrderDetail({
 
     <div className="flex flex-wrap gap-2 rounded-2xl border border-slate-800 bg-slate-900 p-4">
       {order.status === 'DRAFT' && canUpdate ? <button onClick={() => setModal('edit-order')} className="rounded-xl border border-slate-700 px-3 py-2 text-sm">Sửa đơn</button> : null}
-      {order.status === 'DRAFT' && canUpdate ? <button onClick={() => setModal('add-item')} className="rounded-xl border border-cyan-900 px-3 py-2 text-sm text-cyan-300">+ Dòng hàng</button> : null}
-      {order.status === 'DRAFT' && canUpdate && items.length > 0 ? <button disabled={Boolean(busyAction)} onClick={() => void rpc('sale_confirm','xác nhận đơn')} className="rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950">Xác nhận & trừ kho</button> : null}
+      {order.status === 'DRAFT' && canUpdate ? <button onClick={() => setModal('add-item')} className="rounded-xl border border-cyan-900 px-3 py-2 text-sm text-cyan-300">+ Hàng vào đơn</button> : null}
+      {order.status === 'DRAFT' && canUpdate && items.length > 0 ? <button disabled={Boolean(busyAction)} onClick={() => void rpc('sale_confirm','xác nhận đơn')} className="rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950">Xác nhận đơn</button> : null}
       {(order.status === 'CONFIRMED' || order.status === 'PAYMENT_PENDING') && canPay && (order.balance_due ?? 0) > 0 ? <button onClick={() => setModal('payment')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950">Thu tiền</button> : null}
       {order.status === 'PAID' && canUpdate ? <button disabled={Boolean(busyAction) || missingPreHandover.length > 0 || !paymentMatches} title={missingPreHandover.length ? 'Hoàn thành các mục kiểm tra bên dưới trước khi bàn giao' : undefined} onClick={() => void rpc('sale_deliver','bàn giao')} className="rounded-xl bg-violet-500 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Bàn giao</button> : null}
-      {order.status === 'DELIVERED' && canUpdate ? <button disabled={Boolean(busyAction) || missingRequired.length > 0 || !paymentMatches} title={missingRequired.length ? 'Hoàn thành checklist, gồm xác nhận khách đã nhận đủ hàng' : undefined} onClick={() => void rpc('sale_complete','hoàn tất')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">COMPLETED</button> : null}
+      {order.status === 'DELIVERED' && canUpdate ? <button disabled={Boolean(busyAction) || missingRequired.length > 0 || !paymentMatches} title={missingRequired.length ? 'Hoàn thành danh sách kiểm tra, gồm xác nhận khách đã nhận đủ hàng' : undefined} onClick={() => void rpc('sale_complete','hoàn tất')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">Hoàn tất đơn</button> : null}
       {['DRAFT','CONFIRMED','PAYMENT_PENDING'].includes(order.status) && canCancel && order.paid_amount === 0 ? <button onClick={() => setModal('cancel')} className="rounded-xl border border-red-900 px-3 py-2 text-sm text-red-300">Hủy đơn</button> : null}
     </div>
 
@@ -273,15 +274,15 @@ function OrderDetail({
     <WorkflowGuide title="Quy trình bán hàng và bàn giao" steps={salesWorkflow} blockers={salesBlockers} />
 
     <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
-      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3"><h3 className="font-semibold text-white">Dòng hàng</h3><span className="text-xs text-slate-500">{items.length} sản phẩm</span></div>
-      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-950/50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">SL</th><th className="px-4 py-3">Đơn giá</th><th className="px-4 py-3">Giảm</th><th className="px-4 py-3">Thành tiền</th><th className="px-4 py-3">Serial units</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>
+      <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3"><h3 className="font-semibold text-white">Hàng trong đơn</h3><span className="text-xs text-slate-500">{items.length} sản phẩm</span></div>
+      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-950/50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">SL</th><th className="px-4 py-3">Đơn giá</th><th className="px-4 py-3">Giảm</th><th className="px-4 py-3">Thành tiền</th><th className="px-4 py-3">Số máy theo sê-ri</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>
         {items.map((i) => <tr key={i.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{i.product_name_snapshot}</div><div className="font-mono text-xs text-cyan-400">{i.sku_snapshot}</div></td><td className="px-4 py-3">{i.quantity}</td><td className="px-4 py-3">{money(i.unit_price)}</td><td className="px-4 py-3">{money(i.discount_amount)}</td><td className="px-4 py-3 font-semibold">{money(i.line_total)}</td><td className="px-4 py-3">{i.inventory_unit_ids.length || '—'}</td><td className="px-4 py-3 text-right">{order.status === 'DRAFT' && canUpdate ? <div className="flex justify-end gap-1"><button onClick={() => setEditingItem(i)} className="rounded-lg border border-slate-700 px-2 py-1 text-xs">Sửa</button><button onClick={() => void removeItem(i.id)} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Xóa</button></div> : '—'}</td></tr>)}
       </tbody></table></div>
-      {items.length === 0 ? <p className="p-6 text-center text-slate-500">Đơn chưa có dòng hàng.</p> : null}
+      {items.length === 0 ? <p className="p-6 text-center text-slate-500">Đơn chưa có hàng.</p> : null}
     </section>
 
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
-      <div className="mb-3 flex items-center justify-between"><h3 className="font-semibold text-white">Checklist bàn giao · 16 mục</h3><span className="text-xs text-slate-500">Mục bắt buộc phải đạt trước COMPLETED</span></div>
+      <div className="mb-3 flex items-center justify-between"><h3 className="font-semibold text-white">Danh sách kiểm tra bàn giao · 16 mục</h3><span className="text-xs text-slate-500">Mục bắt buộc phải đạt trước khi hoàn tất</span></div>
       <div className="grid gap-2 md:grid-cols-2">
         {checklist.map((item) => <label key={item.key} className={`flex items-start gap-3 rounded-xl border p-3 ${item.checked ? 'border-emerald-900 bg-emerald-950/20' : 'border-slate-800 bg-slate-950/40'}`}>
           <input type="checkbox" className="mt-1" checked={Boolean(item.checked)} disabled={!canUpdate || ['COMPLETED','CANCELLED'].includes(order.status) || item.key === 'payment_confirmed'} onChange={(e) => void toggleChecklist(item,e.target.checked)} />
@@ -292,7 +293,7 @@ function OrderDetail({
 
     <section className="rounded-2xl border border-slate-800 bg-slate-900 p-4">
       <h3 className="mb-3 font-semibold text-white">Thanh toán</h3>
-      <div className="space-y-2">{payments.map((p) => <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-sm"><div><div className="font-mono text-cyan-300">{p.payment_code}</div><div className="mt-1 text-slate-400">{p.payment_method} · {dateTime(p.paid_at)} {p.reference_no ? `· ${p.reference_no}` : ''}</div></div><div className="flex items-center gap-3"><div className={p.status === 'COMPLETED' ? 'font-semibold text-emerald-300' : 'font-semibold text-red-300'}>{money(p.amount)} · {p.status}</div>{p.status === 'COMPLETED' && canRefund && !['DELIVERED','COMPLETED','CANCELLED'].includes(order.status) ? <button onClick={() => void refund(p)} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Hoàn tiền</button> : null}</div></div>)}</div>
+      <div className="space-y-2">{payments.map((p) => <div key={p.id} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-slate-800 bg-slate-950/50 p-3 text-sm"><div><div className="font-mono text-cyan-300">{p.payment_code}</div><div className="mt-1 text-slate-400">{viPaymentMethod(p.payment_method)} · {dateTime(p.paid_at)} {p.reference_no ? `· ${p.reference_no}` : ''}</div></div><div className="flex items-center gap-3"><div className={p.status === 'COMPLETED' ? 'font-semibold text-emerald-300' : 'font-semibold text-red-300'}>{money(p.amount)} · {viStatus(p.status)}</div>{p.status === 'COMPLETED' && canRefund && !['DELIVERED','COMPLETED','CANCELLED'].includes(order.status) ? <button onClick={() => void refund(p)} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Hoàn tiền</button> : null}</div></div>)}</div>
       {payments.length === 0 ? <p className="text-sm text-slate-500">Chưa có thanh toán.</p> : null}
     </section>
 
@@ -302,9 +303,9 @@ function OrderDetail({
       {order.note ? <div className="mt-2">Ghi chú: {order.note}</div> : null}
     </div>
 
-    {modal === 'edit-order' ? <Modal title="Sửa đơn DRAFT" onClose={() => setModal(null)}><EditOrderForm order={order} customers={customers} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
-    {modal === 'add-item' ? <Modal title="Thêm dòng hàng" onClose={() => setModal(null)}><ItemForm orderId={order.id} products={products} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
-    {editingItem ? <Modal title="Sửa dòng hàng" onClose={() => setEditingItem(null)}><ItemForm orderId={order.id} products={products} initial={editingItem} onCancel={() => setEditingItem(null)} onDone={() => { setEditingItem(null); void load() }} /></Modal> : null}
+    {modal === 'edit-order' ? <Modal title="Sửa đơn nháp" onClose={() => setModal(null)}><EditOrderForm order={order} customers={customers} canCreateCustomer={hasPermission(context, 'customer.create')} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
+    {modal === 'add-item' ? <Modal title="Thêm hàng vào đơn" onClose={() => setModal(null)}><ItemForm orderId={order.id} products={products} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
+    {editingItem ? <Modal title="Sửa hàng trong đơn" onClose={() => setEditingItem(null)}><ItemForm orderId={order.id} products={products} initial={editingItem} onCancel={() => setEditingItem(null)} onDone={() => { setEditingItem(null); void load() }} /></Modal> : null}
     {modal === 'payment' ? <Modal title="Thu tiền" onClose={() => setModal(null)}><PaymentForm order={order} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
     {modal === 'cancel' ? <Modal title="Hủy đơn" onClose={() => setModal(null)}><TextActionForm title="Không hủy được đơn" placeholder="Nhập lý do hủy…" submitLabel="Xác nhận hủy" onCancel={() => setModal(null)} onSubmit={async (reason) => { const { error: rpcError } = await supabase.rpc('sale_cancel',{p_order_id:order.id,p_reason:reason}); if (rpcError) throw rpcError; await load() }} /></Modal> : null}
   </div>
@@ -338,17 +339,17 @@ export function SalesPage({
     }
   }, [initialTarget])
   if (!hasPermission(context,'sale.view')) {
-    return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-200"><div className="rounded-2xl border border-amber-900 p-6">Vai trò hiện tại không có quyền xem Sales.</div></main>
+    return <main className="grid min-h-screen place-items-center bg-slate-950 text-slate-200"><div className="rounded-2xl border border-amber-900 p-6">Vai trò hiện tại không có quyền xem bán hàng.</div></main>
   }
   return <main className="min-h-screen bg-slate-950 text-slate-200">
     <header className="border-b border-slate-800 bg-slate-900/90 px-4 py-4 sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-4">
         <div><div className="text-sm font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN</div><h1 className="mt-1 text-xl font-bold text-white">Bán hàng & Thanh toán</h1></div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          {onOpenCrm ? <button onClick={onOpenCrm} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">CRM</button> : null}
+          {onOpenCrm ? <button onClick={onOpenCrm} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Khách hàng</button> : null}
           {onOpenInventory ? <button onClick={onOpenInventory} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Kho</button> : null}
           {onOpenRepair ? <button onClick={onOpenRepair} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Sửa chữa</button> : null}
-          {onOpenChecklist ? <button onClick={onOpenChecklist} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Checklist</button> : null}
+          {onOpenChecklist ? <button onClick={onOpenChecklist} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Danh sách kiểm tra</button> : null}
           {onOpenWarranty ? <button onClick={onOpenWarranty} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300">Bảo hành</button> : null}
           <div className="px-2 text-right"><div className="font-medium text-white">{context.fullName || context.email || 'Người dùng'}</div><div className="text-xs text-slate-500">{context.roleName} · {context.roleCode}</div></div>
           <button onClick={() => void supabase.auth.signOut()} className="rounded-xl border border-slate-700 px-3 py-2">Đăng xuất</button>

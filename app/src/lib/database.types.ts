@@ -1294,7 +1294,16 @@ export type Database = {
           created_at?: string
           updated_at?: string
         },
-        Record<string, never>
+        {
+          email?: string | null
+          full_name?: string | null
+          phone?: string | null
+          avatar_url?: string | null
+          role_id?: string | null
+          is_active?: boolean
+          last_login_at?: string | null
+          updated_at?: string
+        }
       >
       roles: TableDef<
         {

@@ -36,11 +36,13 @@ Baseline: T20.2 `COMPLETE & LOCKED`; migrations #1–#40 bất biến; migration
 - Áp dụng cho tạo đơn bán, tiếp nhận sửa chữa, lịch dịch vụ và license.
 - Không có migration; #41 vẫn để trống.
 
-### T21.2 — Unified actions and filters
+### T21.2 — Unified actions and filters (`COMPLETE`)
 
 - Một nút `+ Tạo mới` theo module, menu được lọc bằng RBAC.
 - Bộ lọc thu gọn dùng chung; giữ tìm kiếm nhanh ở hàng đầu.
 - Chuẩn hóa trạng thái rỗng, làm mới và đặt lại bộ lọc.
+- Hợp nhất phản hồi liên nhánh: điều hướng nhanh Tổng quan/QR, checkbox nhập nhanh, tạo nhanh danh mục, thao tác đơn nháp và quản lý nhân viên theo RBAC.
+- Chuẩn hóa nhãn vận hành tiếng Việt; mã kỹ thuật chỉ giữ ở dữ liệu và audit.
 
 ### T22 — Warranty policy engine
 

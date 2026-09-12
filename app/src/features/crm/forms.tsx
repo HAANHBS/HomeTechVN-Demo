@@ -67,6 +67,7 @@ export function CustomerForm({
   const [phone, setPhone] = useState(initial?.phone ?? '')
   const [email, setEmail] = useState(initial?.email ?? '')
   const [zalo, setZalo] = useState(initial?.zalo ?? '')
+  const [zaloSameAsPhone, setZaloSameAsPhone] = useState(Boolean(initial?.phone && initial.phone === initial.zalo))
   const [address, setAddress] = useState(initial?.address ?? '')
   const [taxCode, setTaxCode] = useState(initial?.tax_code ?? '')
   const [birthday, setBirthday] = useState(initial?.birthday ?? '')
@@ -84,7 +85,7 @@ export function CustomerForm({
       customer_type: customerType,
       phone: toNullable(phone),
       email: toNullable(email),
-      zalo: toNullable(zalo),
+      zalo: toNullable(zaloSameAsPhone ? phone : zalo),
       address: toNullable(address),
       tax_code: toNullable(taxCode),
       birthday: toNullable(birthday),
@@ -133,7 +134,10 @@ export function CustomerForm({
         </label>
         <label className={labelClass}>
           Điện thoại
-          <input className={inputClass} value={phone} onChange={(e) => setPhone(e.target.value)} />
+          <input className={inputClass} value={phone} onChange={(e) => {
+            setPhone(e.target.value)
+            if (zaloSameAsPhone) setZalo(e.target.value)
+          }} />
         </label>
         <label className={labelClass}>
           Email
@@ -141,7 +145,18 @@ export function CustomerForm({
         </label>
         <label className={labelClass}>
           Zalo
-          <input className={inputClass} value={zalo} onChange={(e) => setZalo(e.target.value)} />
+          <input className={inputClass} value={zaloSameAsPhone ? phone : zalo} disabled={zaloSameAsPhone} onChange={(e) => setZalo(e.target.value)} />
+        </label>
+        <label className="flex items-center gap-2 text-sm text-slate-300 md:col-span-2">
+          <input
+            type="checkbox"
+            checked={zaloSameAsPhone}
+            onChange={(event) => {
+              setZaloSameAsPhone(event.target.checked)
+              if (event.target.checked) setZalo(phone)
+            }}
+          />
+          Số Zalo giống số điện thoại
         </label>
         <label className={labelClass}>
           Mã số thuế

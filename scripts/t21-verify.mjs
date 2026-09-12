@@ -11,6 +11,7 @@ function run(command, args, cwd = root) {
 }
 
 run(node, [path.join('scripts', 't21-ui-check.mjs')])
+run(node, [path.join('scripts', 't21-2-ui-check.mjs')])
 run(node, [path.join('scripts', 't20-logic-check.mjs')])
 run(node, [path.join('app', 'node_modules', 'typescript', 'bin', 'tsc'), '-b', 'app'])
 run(node, [path.join('node_modules', 'vite', 'bin', 'vite.js'), 'build'], path.join(root, 'app'))

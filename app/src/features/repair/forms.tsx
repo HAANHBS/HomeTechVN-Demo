@@ -22,23 +22,25 @@ export function CreateRepairForm({ customers, devices, canCreateCustomer, canCre
   const [deviceId,setDeviceId]=useState('')
   const [issue,setIssue]=useState('')
   const [condition,setCondition]=useState('')
+  const [conditionSameAsIssue,setConditionSameAsIssue]=useState(false)
   const [accessories,setAccessories]=useState('')
   const [request,setRequest]=useState('')
   const [priority,setPriority]=useState('NORMAL')
   const [note,setNote]=useState('')
   const [busy,setBusy]=useState(false); const [error,setError]=useState<string|null>(null)
-  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError(null);try{if(!customerId)throw new Error('Hãy chọn hoặc thêm nhanh khách hàng.');if(!deviceId)throw new Error('Hãy chọn hoặc thêm nhanh thiết bị trước khi tiếp nhận.');const {data,error:rpcError}=await supabase.rpc('repair_create',{p_customer_id:customerId,p_customer_device_id:deviceId,p_reported_issue:issue.trim(),p_intake_condition:condition.trim()||undefined,p_accessories_received:accessories.split(/[,\n]/).map(x=>x.trim()).filter(Boolean),p_customer_request:request.trim()||undefined,p_priority:priority,p_intake_note:note.trim()||undefined});if(rpcError)throw rpcError;const id=typeof data==='object'&&data&&!Array.isArray(data)?String((data as Record<string,unknown>).id??''):'';if(!id)throw new Error('RPC không trả repair id.');onCreated(id)}catch(err){setError(err instanceof Error?err.message:'Không tạo được phiếu sửa chữa.')}finally{setBusy(false)}}
+  async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError(null);try{if(!customerId)throw new Error('Hãy chọn hoặc thêm nhanh khách hàng.');if(!deviceId)throw new Error('Hãy chọn hoặc thêm nhanh thiết bị trước khi tiếp nhận.');const {data,error:rpcError}=await supabase.rpc('repair_create',{p_customer_id:customerId,p_customer_device_id:deviceId,p_reported_issue:issue.trim(),p_intake_condition:(conditionSameAsIssue?issue:condition).trim()||undefined,p_accessories_received:accessories.split(/[,\n]/).map(x=>x.trim()).filter(Boolean),p_customer_request:request.trim()||undefined,p_priority:priority,p_intake_note:note.trim()||undefined});if(rpcError)throw rpcError;const id=typeof data==='object'&&data&&!Array.isArray(data)?String((data as Record<string,unknown>).id??''):'';if(!id)throw new Error('Hệ thống không trả về mã phiếu sửa chữa.');onCreated(id)}catch(err){setError(err instanceof Error?err.message:'Không tạo được phiếu sửa chữa.')}finally{setBusy(false)}}
   return <form className="space-y-4" onSubmit={submit}>
     <CustomerDeviceQuickPicker customers={customers} devices={devices} customerId={customerId} deviceId={deviceId} onCustomerChange={setCustomerId} onDeviceChange={setDeviceId} canCreateCustomer={canCreateCustomer} canCreateDevice={canCreateDevice} deviceRequired />
     <div className="grid gap-4 md:grid-cols-2">
-      <label className={labelClass}>Ưu tiên<select className={inputClass} value={priority} onChange={e=>setPriority(e.target.value)}><option value="NORMAL">NORMAL</option><option value="HIGH">HIGH</option><option value="URGENT">URGENT</option></select></label>
+      <label className={labelClass}>Mức ưu tiên<select className={inputClass} value={priority} onChange={e=>setPriority(e.target.value)}><option value="NORMAL">Bình thường</option><option value="HIGH">Cao</option><option value="URGENT">Khẩn cấp</option></select></label>
       <label className={labelClass}>Phụ kiện nhận kèm<input className={inputClass} value={accessories} onChange={e=>setAccessories(e.target.value)} placeholder="Sạc, túi, chuột…" /></label>
     </div>
-    <label className={labelClass}>Lỗi khách báo *<textarea required className={inputClass} rows={3} value={issue} onChange={e=>setIssue(e.target.value)} /></label>
-    <label className={labelClass}>Tình trạng khi nhận<textarea className={inputClass} rows={2} value={condition} onChange={e=>setCondition(e.target.value)} /></label>
+    <label className={labelClass}>Lỗi khách báo *<textarea required className={inputClass} rows={3} value={issue} onChange={e=>{setIssue(e.target.value);if(conditionSameAsIssue)setCondition(e.target.value)}} /></label>
+    <label className="flex items-center gap-2 text-sm text-slate-300"><input type="checkbox" checked={conditionSameAsIssue} onChange={e=>{setConditionSameAsIssue(e.target.checked);if(e.target.checked)setCondition(issue)}} />Tình trạng khi nhận giống lỗi khách báo</label>
+    <label className={labelClass}>Tình trạng khi nhận<textarea className={inputClass} rows={2} value={conditionSameAsIssue?issue:condition} disabled={conditionSameAsIssue} onChange={e=>setCondition(e.target.value)} /></label>
     <label className={labelClass}>Yêu cầu khách hàng<textarea className={inputClass} rows={2} value={request} onChange={e=>setRequest(e.target.value)} /></label>
     <label className={labelClass}>Ghi chú tiếp nhận<textarea className={inputClass} rows={2} value={note} onChange={e=>setNote(e.target.value)} /></label>
-    <Actions busy={busy} onCancel={onCancel} label="Tạo phiếu SRV" /><ErrorBox message={error}/>
+    <Actions busy={busy} onCancel={onCancel} label="Tạo phiếu sửa chữa" /><ErrorBox message={error}/>
   </form>
 }
 

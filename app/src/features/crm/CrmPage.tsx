@@ -95,7 +95,7 @@ function CustomerList({
         <div className="flex gap-2">
           <button type="button" onClick={() => void load()} className="rounded-xl border border-slate-700 px-4 py-2 text-sm hover:bg-slate-800">Làm mới</button>
           {canCreate ? (
-            <button type="button" onClick={() => setShowCreate(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Khách hàng</button>
+            <button type="button" onClick={() => setShowCreate(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Tạo mới</button>
           ) : null}
         </div>
       </div>
@@ -326,13 +326,13 @@ export function CrmPage({ context, initialTarget, initialAction, onOpenInventory
               <button type="button" onClick={onOpenRepair} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300 hover:bg-cyan-950/40">Sửa chữa</button>
             ) : null}
             {onOpenChecklist ? (
-              <button type="button" onClick={onOpenChecklist} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300 hover:bg-cyan-950/40">Checklist</button>
+              <button type="button" onClick={onOpenChecklist} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300 hover:bg-cyan-950/40">Danh sách kiểm tra</button>
             ) : null}
             {onOpenWarranty ? (
               <button type="button" onClick={onOpenWarranty} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300 hover:bg-cyan-950/40">Bảo hành</button>
             ) : null}
             {onOpenServiceLicense ? (
-              <button type="button" onClick={onOpenServiceLicense} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300 hover:bg-cyan-950/40">Dịch vụ & License</button>
+              <button type="button" onClick={onOpenServiceLicense} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300 hover:bg-cyan-950/40">Dịch vụ & bản quyền</button>
             ) : null}
             {onOpenReminders ? (
               <button type="button" onClick={onOpenReminders} className="rounded-xl border border-cyan-900 px-3 py-2 text-cyan-300 hover:bg-cyan-950/40">Nhắc việc</button>
