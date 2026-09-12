@@ -102,8 +102,8 @@ for (const relative of topLevelPages) {
 
 const appPackage = JSON.parse(read('app/package.json'))
 const rootPackage = JSON.parse(read('package.json'))
-if (appPackage.version !== '0.21.2') fail('app version must be 0.21.2')
-if (rootPackage.version !== '0.21.2-t21.2') fail('root version must be 0.21.2-t21.2')
+if (appPackage.version !== '0.21.3') fail('app version must be 0.21.3')
+if (rootPackage.version !== '0.21.3-t21.3') fail('root version must be 0.21.3-t21.3')
 
 if (!failed) {
   console.log('T21.2 BRANCH REQUIREMENT MATRIX: PASS')

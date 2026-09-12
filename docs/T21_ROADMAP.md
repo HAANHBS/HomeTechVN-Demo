@@ -44,6 +44,15 @@ Baseline: T20.2 `COMPLETE & LOCKED`; migrations #1–#40 bất biến; migration
 - Hợp nhất phản hồi liên nhánh: điều hướng nhanh Tổng quan/QR, checkbox nhập nhanh, tạo nhanh danh mục, thao tác đơn nháp và quản lý nhân viên theo RBAC.
 - Chuẩn hóa nhãn vận hành tiếng Việt; mã kỹ thuật chỉ giữ ở dữ liệu và audit.
 
+### T21.3 — Repair quote and guided continuation (`COMPLETE`)
+
+- Tách tiền công, tiền linh kiện, giảm giá và tổng khách thanh toán trong báo giá sửa chữa.
+- Ô không phát sinh để trống và được gửi bằng `0`; bước nhập tiền là 1 VNĐ, không tự nhảy 1.000 VNĐ.
+- Chặn báo giá rỗng và chặn giảm giá vượt tiền công cộng tiền linh kiện trước khi gọi RPC.
+- Một nút `Tiếp tục thực hiện` tự dẫn đến bước hợp lệ kế tiếp theo trạng thái, dữ liệu và RBAC.
+- Các nhánh ngoại lệ vẫn tách riêng: chờ linh kiện, không sửa được, chuyển bảo hành và hủy phiếu.
+- Không có migration; #41 vẫn để trống cho T22.
+
 ### T22 — Warranty policy engine
 
 - Chính sách bảo hành theo sản phẩm/danh mục/dịch vụ.

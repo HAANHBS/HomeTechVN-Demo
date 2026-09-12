@@ -1,7 +1,7 @@
-# HomeTechVN Management — T21.2 Branch Consolidation
+# HomeTechVN Management — T21.3 Repair Flow
 
-Current release: `0.21.2-t21.2`. Migrations #1–#40 are deployed and locked;
-T21.2 is UI/Auth-client only, so migration #41 remains free for T22.
+Current release: `0.21.3-t21.3`. Migrations #1–#40 are deployed and locked;
+T21.3 is UI-only, so migration #41 remains free for T22.
 Payment totals, ledger reconciliation, workflow prerequisites, automatic sale
 warranty and authenticated serial/QR warranty scanning are accepted against
 hosted fictional data. Demo Admin receives all application RBAC permissions;
@@ -11,9 +11,12 @@ Sales, repair intake, service schedules and software licenses share a searchable
 customer/device picker. T21.2 also consolidates quick Dashboard/QR navigation,
 inline category creation, faster customer/repair intake, clearer draft-order
 editing, RBAC-gated staff management and Vietnamese operational labels.
+T21.3 fixes repair quoting so blank cost components remain zero, previews labor,
+parts, discount and customer total separately, and provides one contextual
+`Tiếp tục thực hiện` action for the valid next repair step.
 
 From T20.2 onward acceptance is automated on the hosted fake-data project. PC or
-Windows acceptance is not required. See `docs/T21_2_BRANCH_CONSOLIDATION.md`,
+Windows acceptance is not required. See `docs/T21_3_REPAIR_FLOW.md`, `docs/T21_2_BRANCH_CONSOLIDATION.md`,
 `docs/T21_ROADMAP.md`, `docs/T20_STATUS.md` and `docs/T20_RUNBOOK.md`.
 
 ---

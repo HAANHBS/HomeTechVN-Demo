@@ -113,13 +113,13 @@ const rootPackage = JSON.parse(read('package.json'))
 const appPackage = JSON.parse(read('app/package.json'))
 const rootLock = JSON.parse(read('package-lock.json'))
 const appLock = JSON.parse(read('app/package-lock.json'))
-if (rootPackage.version !== '0.21.2-t21.2' || rootLock.version !== rootPackage.version || rootLock.packages?.['']?.version !== rootPackage.version) {
+if (rootPackage.version !== '0.21.3-t21.3' || rootLock.version !== rootPackage.version || rootLock.packages?.['']?.version !== rootPackage.version) {
   fail('root package/lock version mismatch')
 }
-if (appPackage.version !== '0.21.2' || appLock.version !== appPackage.version || appLock.packages?.['']?.version !== appPackage.version) {
+if (appPackage.version !== '0.21.3' || appLock.version !== appPackage.version || appLock.packages?.['']?.version !== appPackage.version) {
   fail('app package/lock version mismatch')
 }
-for (const script of ['t21:ui-check', 't21:verify', 't21.2:ui-check']) {
+for (const script of ['t21:ui-check', 't21:verify', 't21.2:ui-check', 't21.3:ui-check']) {
   if (!rootPackage.scripts?.[script]) fail(`missing package script ${script}`)
 }
 

@@ -85,7 +85,7 @@ const repairPage=requireTokens('app/src/features/repair/RepairPage.tsx',[
   'KHO',
   'BÀN GIAO',
   '<Err message={error}/>',
-  'disabled={pendingParts.length>0||!hasApprovedQuote}',
+  'allowed:canUpdate&&pendingParts.length===0&&hasApprovedQuote',
 ])
 if(!repairPage.includes('</div>\n <Err message={error}/>\n <WorkflowGuide'))fail('repair action error is not directly below the action buttons')
 
