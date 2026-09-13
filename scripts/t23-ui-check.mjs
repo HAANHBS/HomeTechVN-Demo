@@ -39,19 +39,27 @@ const migration = requireTokens('supabase/migrations/20260913101000_t23_multi_ro
 if (migration.includes('pm.is_active')) fail('permissions has no is_active column')
 if (!migration.includes('grant execute on function public.sale_add_item_v2')) fail('v2 sale RPC grant missing')
 
-requireTokens('app/src/features/dashboard/DashboardPage.tsx', [
-  'className="sticky top-0',
-  '>HomeTechVN</div>',
-  '>Tổng quan điều hành</h1>',
-  '>Asia/Bangkok</span>',
-  '{quickActions}',
+const dashboard = requireTokens('app/src/features/dashboard/DashboardPage.tsx', [
+  'Làm mới',
+  'Đăng xuất',
 ])
+if (dashboard.includes('{quickActions}') || dashboard.includes('dashboard-quick-actions')) fail('dashboard must not own a duplicate quick-action group')
 const app = requireTokens('app/src/App.tsx', [
-  'const dashboardQuickActions',
-  'aria-label="Điều hướng cố định sau tiêu đề"',
-  'quickActions={dashboardQuickActions}',
+  'const operationsHeader',
+  'className="operations-header"',
+  'className="operations-title-block"',
+  'Tổng quan điều hành',
+  'Asia/Bangkok',
+  'aria-label="Điều hướng nhanh cố định"',
+  '<div className="operations-module-content">{node}</div>',
 ])
-if (app.slice(app.indexOf("if (module === 'dashboard'"), app.indexOf("if (module === 'reports'")).includes('{globalQuickActions}')) fail('dashboard must not render duplicate floating quick actions')
+if ((app.match(/<QrCommandCenter context=\{authState\.context\}/g) ?? []).length !== 1) fail('all modules must share exactly one QR command trigger')
+requireTokens('app/src/index.css', [
+  '.operations-header {',
+  'position: sticky;',
+  '.operations-header-inner {',
+  '.operations-module-content > main > header.sticky {',
+])
 
 requireTokens('app/src/features/staff/StaffPage.tsx', [
   ".from('profile_roles')",
