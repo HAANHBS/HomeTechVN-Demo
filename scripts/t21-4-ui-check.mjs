@@ -37,11 +37,12 @@ const additionalLocked = new Map([
   ['supabase/migrations/20260910153627_t22_remove_manual_repair_warranty_rpc.sql','a49c14c781b2e531bc65a23bfcb5dae3728f7e128dfd46e4429b536ee6ed4942'],
   ['supabase/migrations/20260910155015_t22_remove_manual_sale_warranty_rpc.sql','acf0e8aa16d93a95c37e40371d95d3b96f46cd0f6d148eb5a5a3ec6e9045816c'],
   ['supabase/migrations/20260913021403_t21_4_payment_vietqr_config.sql','f8826287edd7bdc37065e9b93d0cb737e471408407b2e1f086375dcaab1cc2c9'],
+  ['supabase/migrations/20260913021747_t21_4_payment_qr_invoker_hardening.sql','f38704c84a36f53012acc1b6dacd4e47b0874aff866f8effa7e2ad621dca8e38'],
 ])
 for (const [relative,digest] of additionalLocked) if (hash(relative) !== digest) fail(`locked migration changed: ${relative}`)
 
 const migrations = fs.readdirSync(path.join(root,'supabase','migrations')).filter((name) => name.endsWith('.sql')).sort()
-if (migrations.length !== 46) fail(`expected production #1-#45 plus T21.4 hardening #46, found ${migrations.length}`)
+if (migrations.length < 46) fail(`expected at least the locked production migrations #1-#46, found ${migrations.length}`)
 for (const [index,name] of [
   [40,'20260910145644_t22_auto_repair_warranty.sql'],
   [41,'20260910153258_t22_integrity_rpc_surface_hardening.sql'],
@@ -112,8 +113,8 @@ requireTokens('app/src/lib/database.types.ts',['payment_qr_config_get:','payment
 
 const rootPackage = JSON.parse(read('package.json'))
 const appPackage = JSON.parse(read('app/package.json'))
-if (rootPackage.version !== '0.21.4-t21.4') fail('root version must be 0.21.4-t21.4')
-if (appPackage.version !== '0.21.4') fail('app version must be 0.21.4')
+if (rootPackage.version !== '0.23.0-t23') fail('root version must be 0.23.0-t23')
+if (appPackage.version !== '0.23.0') fail('app version must be 0.23.0')
 
 if (!failed) {
   console.log('T21.4 PRODUCTION MIGRATIONS #1-#45 ALIGNED: PASS')

@@ -197,6 +197,17 @@ export default function App() {
     </div>
   )
 
+  const dashboardQuickActions = (
+    <div className="dashboard-quick-actions" aria-label="Điều hướng cố định sau tiêu đề">
+      {canOpenDashboard ? (
+        <button type="button" className="global-home-button" onClick={() => setModule('dashboard')} aria-label="Mở Tổng quan" aria-current="page">
+          <span aria-hidden="true">⌂</span><span>Tổng quan</span>
+        </button>
+      ) : null}
+      <QrCommandCenter context={authState.context} initialToken={initialQrToken} onNavigate={handleQrNavigate} triggerClassName="global-qr-button" />
+    </div>
+  )
+
   const withDashboard = (node: ReactNode) => (
     <>
       <DemoModeBanner />
@@ -224,8 +235,8 @@ export default function App() {
           onOpenReports={canOpenReports ? () => setModule('reports') : undefined}
           onOpenAudit={canOpenAudit ? () => setModule('audit') : undefined}
           onOpenStaff={canOpenStaff ? () => setModule('staff') : undefined}
+          quickActions={dashboardQuickActions}
         />
-        {globalQuickActions}
         {qrHandoffNotice}
       </>
     )

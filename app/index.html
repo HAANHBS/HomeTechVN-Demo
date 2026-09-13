@@ -13,7 +13,26 @@
     <title>HomeTechVN · Hosted Demo</title>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main style="min-height:100vh;display:grid;place-items:center;background:#020617;color:#e2e8f0;font-family:system-ui,sans-serif;padding:24px">
+        <section style="max-width:520px;border:1px solid #1e293b;border-radius:20px;background:#0f172a;padding:24px;text-align:center">
+          <strong>Đang tải HomeTechVN…</strong>
+          <p style="margin:12px 0 0;color:#94a3b8;font-size:14px">Nếu màn hình không chuyển sau vài giây, hãy tải lại trang để nhận phiên bản mới.</p>
+          <button type="button" onclick="location.reload()" style="margin-top:16px;border:1px solid #155e75;border-radius:12px;background:#06b6d4;color:#082f49;padding:10px 16px;font-weight:700">Tải lại ứng dụng</button>
+        </section>
+      </main>
+    </div>
+    <script>
+      window.addEventListener('error', function (event) {
+        if (!(event.target instanceof HTMLScriptElement) || sessionStorage.getItem('htvn_asset_recovery') === '1') return
+        sessionStorage.setItem('htvn_asset_recovery', '1')
+        Promise.all([
+          navigator.serviceWorker ? navigator.serviceWorker.getRegistrations().then(function (items) { return Promise.all(items.map(function (item) { return item.unregister() })) }) : Promise.resolve(),
+          window.caches ? caches.keys().then(function (keys) { return Promise.all(keys.map(function (key) { return caches.delete(key) })) }) : Promise.resolve(),
+        ]).finally(function () { location.reload() })
+      }, true)
+      window.addEventListener('load', function () { sessionStorage.removeItem('htvn_asset_recovery') })
+    </script>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

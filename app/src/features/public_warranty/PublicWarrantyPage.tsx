@@ -18,6 +18,7 @@ type PublicWarrantyPayload = {
   days_remaining?: number | null
   coverage?: string
   product?: string | null
+  customer_name_masked?: string | null
   serial_masked?: string | null
   phone_masked?: string | null
   latest_claim?: PublicClaim | null
@@ -129,6 +130,7 @@ export function PublicWarrantyPage({ token }: { token: string | null }) {
 
         <section className="space-y-4 rounded-3xl border border-slate-800 bg-slate-900 p-5 sm:p-6">
           <div><div className="text-xs uppercase tracking-[0.14em] text-slate-500">Sản phẩm / thiết bị</div><div className="mt-1 text-base font-semibold text-white">{payload.product || '—'}</div></div>
+          <div><div className="text-xs uppercase tracking-[0.14em] text-slate-500">Người mua</div><div className="mt-1 text-base font-semibold text-white">{payload.customer_name_masked || '—'}</div></div>
           <div className="grid gap-3 sm:grid-cols-2">
             <div className="rounded-xl bg-slate-950/70 p-3"><div className="text-xs text-slate-500">Serial đã ẩn</div><div className="mt-1 font-mono text-sm text-cyan-300">{payload.serial_masked || '—'}</div></div>
             <div className="rounded-xl bg-slate-950/70 p-3"><div className="text-xs text-slate-500">Điện thoại đã ẩn</div><div className="mt-1 font-mono text-sm text-cyan-300">{payload.phone_masked || '—'}</div></div>
@@ -143,7 +145,7 @@ export function PublicWarrantyPage({ token }: { token: string | null }) {
         </section>
       </> : null}
 
-      <footer className="px-2 text-center text-xs leading-5 text-slate-600">Trang công khai chỉ hiển thị dữ liệu tối thiểu. Số điện thoại và Serial đã được che để bảo vệ thông tin khách hàng.</footer>
+      <footer className="px-2 text-center text-xs leading-5 text-slate-600">Trang công khai chỉ hiển thị dữ liệu tối thiểu. Tên người mua, số điện thoại và Serial đã được che để bảo vệ thông tin khách hàng.</footer>
     </div>
   </main>
 }

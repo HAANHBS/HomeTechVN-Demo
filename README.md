@@ -1,4 +1,8 @@
-# HomeTechVN Management — T21.4 Payment QR
+# HomeTechVN Management — T23 Warranty QR & Multi-role
+
+Current release: `0.23.0-t23`. T23 bổ sung đa chức vụ cho nhân viên, thời hạn bảo hành tại bán hàng/sửa chữa, tem QR tra cứu bảo hành có nhận diện người mua đã che thông tin, hai nút Tổng quan/Quét QR cố định sau tiêu đề điều hành và cơ chế phục hồi PWA khi cache cũ gây màn hình trắng. Xem `docs/T23_MULTI_ROLE_WARRANTY_QR.md` và chạy `npm run t23:verify`.
+
+## Nền T21.4
 
 Current release: `0.21.4-t21.4`. Migrations #1–#40 remain hash-locked;
 the production T22 migrations #41–#44 are now aligned back into source. T21.4

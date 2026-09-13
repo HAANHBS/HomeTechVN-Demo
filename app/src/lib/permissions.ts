@@ -6,6 +6,8 @@ export type AppUserContext = {
   fullName: string | null
   roleCode: string
   roleName: string
+  roleCodes: string[]
+  roleNames: string[]
   permissions: Set<string>
 }
 
@@ -18,21 +20,32 @@ export async function loadUserContext(userId: string): Promise<AppUserContext> {
 
   if (profileError) throw profileError
   if (!profile.is_active) throw new Error('Tài khoản chưa được kích hoạt.')
-  if (!profile.role_id) throw new Error('Tài khoản chưa được gán vai trò.')
+  const { data: assignments, error: assignmentError } = await supabase
+    .from('profile_roles')
+    .select('role_id')
+    .eq('profile_id', userId)
 
-  const { data: role, error: roleError } = await supabase
+  if (assignmentError) throw assignmentError
+  const roleIds = Array.from(new Set([
+    ...(profile.role_id ? [profile.role_id] : []),
+    ...assignments.map((item) => item.role_id),
+  ]))
+  if (roleIds.length === 0) throw new Error('Tài khoản chưa được gán chức vụ.')
+
+  const { data: roles, error: roleError } = await supabase
     .from('roles')
     .select('id,code,name,is_active')
-    .eq('id', profile.role_id)
-    .single()
+    .in('id', roleIds)
 
   if (roleError) throw roleError
-  if (!role.is_active) throw new Error('Vai trò hiện đang bị vô hiệu hóa.')
+  const activeRoles = roles.filter((role) => role.is_active)
+  if (activeRoles.length === 0) throw new Error('Các chức vụ hiện đang bị vô hiệu hóa.')
+  const primaryRole = activeRoles.find((role) => role.id === profile.role_id) ?? activeRoles[0]
 
   const { data: mappings, error: mappingError } = await supabase
     .from('role_permissions')
     .select('permission_id')
-    .eq('role_id', role.id)
+    .in('role_id', activeRoles.map((role) => role.id))
 
   if (mappingError) throw mappingError
 
@@ -53,8 +66,10 @@ export async function loadUserContext(userId: string): Promise<AppUserContext> {
     userId: profile.id,
     email: profile.email,
     fullName: profile.full_name,
-    roleCode: role.code,
-    roleName: role.name,
+    roleCode: primaryRole.code,
+    roleName: activeRoles.map((role) => role.name).join(' · '),
+    roleCodes: activeRoles.map((role) => role.code),
+    roleNames: activeRoles.map((role) => role.name),
     permissions: new Set(permissionCodes),
   }
 }

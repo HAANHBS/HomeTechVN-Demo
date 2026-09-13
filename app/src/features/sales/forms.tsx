@@ -142,14 +142,30 @@ export function ItemForm({
   const selectedProduct = useMemo(() => products.find((p) => p.product_id === productId), [productId, products])
   const [price, setPrice] = useState(String(initial?.unit_price ?? selectedProduct?.sale_price ?? 0))
   const [discount, setDiscount] = useState(String(initial?.discount_amount ?? 0))
+  const [warrantyMonths, setWarrantyMonths] = useState(String(initial?.warranty_months ?? 0))
   const [units, setUnits] = useState<InventoryUnitRow[]>([])
   const [selectedUnits, setSelectedUnits] = useState<string[]>(initial?.inventory_unit_ids ?? [])
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!initial) setPrice(String(selectedProduct?.sale_price ?? 0))
+    if (!initial) {
+      setPrice(String(selectedProduct?.sale_price ?? 0))
+    }
   }, [initial, selectedProduct])
+
+  useEffect(() => {
+    let cancelled = false
+    async function loadWarrantyDefault() {
+      if (initial || !productId) return
+      const { data, error: queryError } = await supabase.from('products').select('warranty_months').eq('id', productId).single()
+      if (cancelled) return
+      if (queryError) setError(queryError.message)
+      else setWarrantyMonths(String(data.warranty_months ?? 0))
+    }
+    void loadWarrantyDefault()
+    return () => { cancelled = true }
+  }, [initial, productId])
 
   useEffect(() => {
     let cancelled = false
@@ -178,22 +194,24 @@ export function ItemForm({
         throw new Error(`Cần chọn đúng ${Math.trunc(qty)} Serial.`)
       }
       if (initial) {
-        const { error: rpcError } = await supabase.rpc('sale_update_item', {
+        const { error: rpcError } = await supabase.rpc('sale_update_item_v2', {
           p_item_id: initial.id,
           p_quantity: qty,
           p_unit_price: Math.max(0, parseNumber(price)),
           p_discount_amount: Math.max(0, parseNumber(discount)),
           p_inventory_unit_ids: selectedProduct?.track_serial ? selectedUnits : [],
+          p_warranty_months: Math.max(0, Math.trunc(parseNumber(warrantyMonths))),
         })
         if (rpcError) throw rpcError
       } else {
-        const { error: rpcError } = await supabase.rpc('sale_add_item', {
+        const { error: rpcError } = await supabase.rpc('sale_add_item_v2', {
           p_order_id: orderId,
           p_product_id: productId,
           p_quantity: qty,
           p_unit_price: Math.max(0, parseNumber(price)),
           p_discount_amount: Math.max(0, parseNumber(discount)),
           p_inventory_unit_ids: selectedProduct?.track_serial ? selectedUnits : [],
+          p_warranty_months: Math.max(0, Math.trunc(parseNumber(warrantyMonths))),
         })
         if (rpcError) throw rpcError
       }
@@ -214,15 +232,19 @@ export function ItemForm({
         {products.filter((p) => p.product_id).map((p) => <option key={p.product_id!} value={p.product_id!}>{p.sku} · {p.name} · tồn {p.stock_qty ?? 0}</option>)}
       </select>
     </label>
-    <div className="grid gap-4 sm:grid-cols-3">
+    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <label className="text-sm font-medium">Số lượng
         <input type="number" min="0.001" step={selectedProduct?.track_serial ? '1' : '0.001'} className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={quantity} onChange={(e) => setQuantity(e.target.value)} />
       </label>
       <label className="text-sm font-medium">Đơn giá
-        <input type="number" min="0" step="1000" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={price} onChange={(e) => setPrice(e.target.value)} />
+        <input type="number" min="0" step="1" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={price} onChange={(e) => setPrice(e.target.value)} />
       </label>
       <label className="text-sm font-medium">Giảm dòng
-        <input type="number" min="0" step="1000" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+        <input type="number" min="0" step="1" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={discount} onChange={(e) => setDiscount(e.target.value)} />
+      </label>
+      <label className="text-sm font-medium">Bảo hành (tháng)
+        <input type="number" min="0" max="120" step="1" className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={warrantyMonths} onChange={(e) => setWarrantyMonths(e.target.value)} />
+        <span className="mt-1 block text-xs text-slate-500">Nhập 0 nếu không bảo hành.</span>
       </label>
     </div>
 

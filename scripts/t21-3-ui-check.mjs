@@ -44,7 +44,7 @@ const forms = requireTokens('app/src/features/repair/forms.tsx', [
 ])
 const quoteForm = forms.slice(forms.indexOf('export function QuoteForm'), forms.indexOf('export function PartForm'))
 if (quoteForm.includes('step="1000"')) fail('repair quote must not increment an optional amount by 1,000 VND')
-if ((quoteForm.match(/step="1"/g) ?? []).length !== 3) fail('labor, parts and discount must each use a 1 VND input step')
+if ((quoteForm.match(/step="1"/g) ?? []).length < 3) fail('labor, parts and discount must each use a 1 VND input step')
 if (forms.includes('step="1000"')) fail('repair money inputs must not increment by 1,000 VND')
 
 const repair = requireTokens('app/src/features/repair/RepairPage.tsx', [
@@ -86,8 +86,8 @@ for (const scenario of [
 
 const rootPackage = JSON.parse(read('package.json'))
 const appPackage = JSON.parse(read('app/package.json'))
-if (rootPackage.version !== '0.21.4-t21.4') fail('root version must be 0.21.4-t21.4')
-if (appPackage.version !== '0.21.4') fail('app version must be 0.21.4')
+if (rootPackage.version !== '0.23.0-t23') fail('root version must be 0.23.0-t23')
+if (appPackage.version !== '0.23.0') fail('app version must be 0.23.0')
 
 if (!failed) {
   console.log('T21.3 REPAIR QUOTE AMOUNT CONTRACT: PASS')

@@ -152,6 +152,7 @@ export function DashboardPage({
   onOpenReports,
   onOpenAudit,
   onOpenStaff,
+  quickActions,
 }: {
   context: AppUserContext
   onOpenCrm?: () => void
@@ -166,6 +167,7 @@ export function DashboardPage({
   onOpenReports?: () => void
   onOpenAudit?: () => void
   onOpenStaff?: () => void
+  quickActions?: ReactNode
 }) {
   const [days, setDays] = useState<7 | 30 | 90>(30)
   const [data, setData] = useState<DashboardSnapshot | null>(null)
@@ -216,9 +218,12 @@ export function DashboardPage({
   return <main className="min-h-screen bg-slate-950 text-slate-200">
     <header className="sticky top-0 z-40 border-b border-slate-800/90 bg-slate-950/90 px-3 py-3 backdrop-blur-xl sm:px-6">
       <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-        <div className="min-w-0">
-          <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN</div>
-          <div className="mt-1 flex min-w-0 items-baseline gap-2"><h1 className="truncate text-lg font-bold text-white sm:text-xl">Tổng quan điều hành</h1><span className="hidden text-xs text-slate-500 md:inline">Asia/Bangkok</span></div>
+        <div className="flex min-w-0 flex-wrap items-center gap-3">
+          <div className="min-w-0">
+            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN</div>
+            <div className="mt-1 flex min-w-0 items-baseline gap-2"><h1 className="truncate text-lg font-bold text-white sm:text-xl">Tổng quan điều hành</h1><span className="hidden text-xs text-slate-500 md:inline">Asia/Bangkok</span></div>
+          </div>
+          {quickActions}
         </div>
         <div className="flex items-center gap-2">
           <button type="button" onClick={() => void load()} disabled={loading} className="rounded-xl border border-slate-700 px-3 py-2 text-sm hover:bg-slate-800 disabled:opacity-50">{loading ? 'Đang tải…' : 'Làm mới'}</button>

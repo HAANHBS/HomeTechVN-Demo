@@ -54,11 +54,11 @@ export function DiagnosticForm({ orderId,onCancel,onDone }:{orderId:string;onCan
 }
 
 export function QuoteForm({ orderId,onCancel,onDone }:{orderId:string;onCancel:()=>void;onDone:()=>void}){
- const[labor,setLabor]=useState('');const[parts,setParts]=useState('');const[discount,setDiscount]=useState('');const[validUntil,setValidUntil]=useState('');const[note,setNote]=useState('');const[busy,setBusy]=useState(false);const[error,setError]=useState<string|null>(null)
+ const[labor,setLabor]=useState('');const[parts,setParts]=useState('');const[discount,setDiscount]=useState('');const[warrantyMonths,setWarrantyMonths]=useState('3');const[validUntil,setValidUntil]=useState('');const[note,setNote]=useState('');const[busy,setBusy]=useState(false);const[error,setError]=useState<string|null>(null)
  const laborAmount=parseNumber(labor),partsAmount=parseNumber(parts),discountAmount=parseNumber(discount)
  const subtotal=laborAmount+partsAmount
  const total=Math.max(subtotal-discountAmount,0)
- async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError(null);try{if(laborAmount<0||partsAmount<0||discountAmount<0)throw new Error('Các khoản tiền không được âm.');if(laborAmount===0&&partsAmount===0)throw new Error('Hãy nhập ít nhất tiền công hoặc tiền linh kiện.');if(discountAmount>subtotal)throw new Error('Giảm giá không được lớn hơn tiền công cộng tiền linh kiện.');const {error:rpcError}=await supabase.rpc('repair_create_quote',{p_order_id:orderId,p_labor_amount:laborAmount,p_parts_amount:partsAmount,p_discount_amount:discountAmount,p_valid_until:validUntil||undefined,p_note:note.trim()||undefined});if(rpcError)throw rpcError;onDone()}catch(err){setError(err instanceof Error?err.message:'Không tạo được báo giá.')}finally{setBusy(false)}}
+ async function submit(e:FormEvent<HTMLFormElement>){e.preventDefault();setBusy(true);setError(null);try{const months=Math.trunc(parseNumber(warrantyMonths));if(laborAmount<0||partsAmount<0||discountAmount<0)throw new Error('Các khoản tiền không được âm.');if(laborAmount===0&&partsAmount===0)throw new Error('Hãy nhập ít nhất tiền công hoặc tiền linh kiện.');if(discountAmount>subtotal)throw new Error('Giảm giá không được lớn hơn tiền công cộng tiền linh kiện.');if(months<1||months>120)throw new Error('Thời hạn bảo hành phải từ 1 đến 120 tháng.');const {error:rpcError}=await supabase.rpc('repair_create_quote_v2',{p_order_id:orderId,p_labor_amount:laborAmount,p_parts_amount:partsAmount,p_discount_amount:discountAmount,p_warranty_months:months,p_valid_until:validUntil||undefined,p_note:note.trim()||undefined});if(rpcError)throw rpcError;onDone()}catch(err){setError(err instanceof Error?err.message:'Không tạo được báo giá.')}finally{setBusy(false)}}
  return <form className="space-y-4" onSubmit={submit}>
   <p className="rounded-xl border border-cyan-950 bg-cyan-950/20 p-3 text-sm text-slate-300">Chỉ nhập khoản thực tế có phát sinh. Ô để trống được tính là 0 ₫.</p>
   <div className="grid gap-4 md:grid-cols-3">
@@ -72,7 +72,7 @@ export function QuoteForm({ orderId,onCancel,onDone }:{orderId:string;onCancel:(
    <div><div className="text-slate-500">Giảm giá</div><div className="mt-1 font-semibold text-amber-300">− {formatMoney(discountAmount)}</div></div>
    <div><div className="text-slate-500">Khách thanh toán</div><div className="mt-1 text-lg font-bold text-emerald-300">{formatMoney(total)}</div></div>
   </div>
-  <label className={labelClass}>Hiệu lực đến<input type="date" className={inputClass} value={validUntil} onChange={e=>setValidUntil(e.target.value)}/></label>
+  <div className="grid gap-4 sm:grid-cols-2"><label className={labelClass}>Bảo hành sửa chữa (tháng)<input type="number" min="1" max="120" step="1" className={inputClass} value={warrantyMonths} onChange={e=>setWarrantyMonths(e.target.value)}/><span className="mt-1 block text-xs text-slate-500">Áp dụng cho bảo hành công sửa chữa sau khi hoàn tất phiếu.</span></label><label className={labelClass}>Hiệu lực báo giá đến<input type="date" className={inputClass} value={validUntil} onChange={e=>setValidUntil(e.target.value)}/></label></div>
   <label className={labelClass}>Ghi chú<textarea className={inputClass} rows={2} value={note} onChange={e=>setNote(e.target.value)}/></label>
   <Actions busy={busy} onCancel={onCancel} label="Lưu báo giá"/><ErrorBox message={error}/>
  </form>

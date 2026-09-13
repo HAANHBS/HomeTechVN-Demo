@@ -408,6 +408,7 @@ export type RepairQuoteRow = {
   labor_amount: number
   parts_amount: number
   discount_amount: number
+  warranty_months: number
   total_amount: number | null
   valid_until: string | null
   note: string | null
@@ -1305,6 +1306,24 @@ export type Database = {
           updated_at?: string
         }
       >
+      profile_roles: TableDef<
+        {
+          profile_id: string
+          role_id: string
+          assigned_by: string | null
+          assigned_at: string
+        },
+        {
+          profile_id: string
+          role_id: string
+          assigned_by?: string | null
+          assigned_at?: string
+        },
+        {
+          assigned_by?: string | null
+          assigned_at?: string
+        }
+      >
       roles: TableDef<
         {
           id: string
@@ -1436,6 +1455,18 @@ export type Database = {
         }
         Returns: Json
       }
+      sale_add_item_v2: {
+        Args: {
+          p_order_id: string
+          p_product_id: string
+          p_quantity: number
+          p_unit_price?: number
+          p_discount_amount?: number
+          p_inventory_unit_ids?: string[]
+          p_warranty_months?: number
+        }
+        Returns: Json
+      }
       sale_update_item: {
         Args: {
           p_item_id: string
@@ -1443,6 +1474,17 @@ export type Database = {
           p_unit_price: number
           p_discount_amount?: number
           p_inventory_unit_ids?: string[]
+        }
+        Returns: Json
+      }
+      sale_update_item_v2: {
+        Args: {
+          p_item_id: string
+          p_quantity: number
+          p_unit_price: number
+          p_discount_amount?: number
+          p_inventory_unit_ids?: string[]
+          p_warranty_months?: number
         }
         Returns: Json
       }
@@ -1527,6 +1569,10 @@ export type Database = {
       }
       repair_create_quote: {
         Args: { p_order_id: string; p_labor_amount: number; p_parts_amount: number; p_discount_amount?: number; p_valid_until?: string; p_note?: string }
+        Returns: Json
+      }
+      repair_create_quote_v2: {
+        Args: { p_order_id: string; p_labor_amount: number; p_parts_amount: number; p_discount_amount?: number; p_valid_until?: string; p_note?: string; p_warranty_months?: number }
         Returns: Json
       }
       repair_submit_quote: { Args: { p_quote_id: string }; Returns: Json }
@@ -1625,6 +1671,7 @@ export type Database = {
       warranty_claim_close: { Args: { p_claim_id: string; p_note?: string }; Returns: Json }
       warranty_public_lookup_server: { Args: { p_token: string }; Returns: Json }
       warranty_public_lookup: { Args: { p_token: string }; Returns: Json }
+      staff_set_roles: { Args: { p_profile_id: string; p_role_ids: string[] }; Returns: Json }
       service_create: {
         Args: {
           p_name: string

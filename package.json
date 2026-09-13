@@ -1,7 +1,7 @@
 {
   "name": "hometechvn",
   "private": true,
-  "version": "0.21.4-t21.4",
+  "version": "0.23.0-t23",
   "scripts": {
     "sb:version": "supabase --version",
     "sb:start": "supabase start",
@@ -73,7 +73,10 @@
     "t21.3:ui-check": "node ./scripts/t21-3-ui-check.mjs",
     "t21.3:build-check": "node ./scripts/t21-3-build-check.mjs",
     "t21.4:ui-check": "node ./scripts/t21-4-ui-check.mjs",
-    "t21.4:build-check": "node ./scripts/t21-4-build-check.mjs"
+    "t21.4:build-check": "node ./scripts/t21-4-build-check.mjs",
+    "t23:ui-check": "node ./scripts/t23-ui-check.mjs",
+    "t23:build-check": "node ./scripts/t23-build-check.mjs",
+    "t23:verify": "node ./scripts/t23-verify.mjs"
   },
   "devDependencies": {
     "supabase": "2.116.0"

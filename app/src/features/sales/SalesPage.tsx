@@ -16,6 +16,7 @@ import { CreateOrderForm, EditOrderForm, ItemForm, PaymentForm, TextActionForm }
 import type { QrAction, QrResolved } from '../qr/QrCommandCenter'
 import { WorkflowGuide, type WorkflowBlocker, type WorkflowGuideStep } from '../../components/WorkflowGuide'
 import { viPaymentMethod, viStatus } from '../../lib/vi'
+import { WarrantyLabelsPanel } from '../warranty/WarrantyLabelsPanel'
 
 function money(value: number | null | undefined) {
   return new Intl.NumberFormat('vi-VN', { style: 'currency', currency: 'VND', maximumFractionDigits: 0 }).format(value ?? 0)
@@ -274,11 +275,12 @@ function OrderDetail({
 
     <ErrorPanel message={error} />
     <WorkflowGuide title="Quy trình bán hàng và bàn giao" steps={salesWorkflow} blockers={salesBlockers} />
+    {['DELIVERED','COMPLETED'].includes(order.status) && hasPermission(context, 'warranty.view') ? <WarrantyLabelsPanel sourceType="SALE" sourceId={order.id} /> : null}
 
     <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900">
       <div className="flex items-center justify-between border-b border-slate-800 px-4 py-3"><h3 className="font-semibold text-white">Hàng trong đơn</h3><span className="text-xs text-slate-500">{items.length} sản phẩm</span></div>
-      <div className="overflow-x-auto"><table className="w-full min-w-[900px] text-left text-sm"><thead className="bg-slate-950/50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">SL</th><th className="px-4 py-3">Đơn giá</th><th className="px-4 py-3">Giảm</th><th className="px-4 py-3">Thành tiền</th><th className="px-4 py-3">Số máy theo sê-ri</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>
-        {items.map((i) => <tr key={i.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{i.product_name_snapshot}</div><div className="font-mono text-xs text-cyan-400">{i.sku_snapshot}</div></td><td className="px-4 py-3">{i.quantity}</td><td className="px-4 py-3">{money(i.unit_price)}</td><td className="px-4 py-3">{money(i.discount_amount)}</td><td className="px-4 py-3 font-semibold">{money(i.line_total)}</td><td className="px-4 py-3">{i.inventory_unit_ids.length || '—'}</td><td className="px-4 py-3 text-right">{order.status === 'DRAFT' && canUpdate ? <div className="flex justify-end gap-1"><button onClick={() => setEditingItem(i)} className="rounded-lg border border-slate-700 px-2 py-1 text-xs">Sửa</button><button onClick={() => void removeItem(i.id)} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Xóa</button></div> : '—'}</td></tr>)}
+      <div className="overflow-x-auto"><table className="w-full min-w-[980px] text-left text-sm"><thead className="bg-slate-950/50 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Sản phẩm</th><th className="px-4 py-3">SL</th><th className="px-4 py-3">Đơn giá</th><th className="px-4 py-3">Giảm</th><th className="px-4 py-3">Thành tiền</th><th className="px-4 py-3">Bảo hành</th><th className="px-4 py-3">Số máy theo sê-ri</th><th className="px-4 py-3 text-right">Sửa</th></tr></thead><tbody>
+        {items.map((i) => <tr key={i.id} className="border-t border-slate-800"><td className="px-4 py-3"><div className="font-medium text-white">{i.product_name_snapshot}</div><div className="font-mono text-xs text-cyan-400">{i.sku_snapshot}</div></td><td className="px-4 py-3">{i.quantity}</td><td className="px-4 py-3">{money(i.unit_price)}</td><td className="px-4 py-3">{money(i.discount_amount)}</td><td className="px-4 py-3 font-semibold">{money(i.line_total)}</td><td className="px-4 py-3">{i.warranty_months > 0 ? `${i.warranty_months} tháng` : 'Không'}</td><td className="px-4 py-3">{i.inventory_unit_ids.length || '—'}</td><td className="px-4 py-3 text-right">{order.status === 'DRAFT' && canUpdate ? <div className="flex justify-end gap-1"><button onClick={() => setEditingItem(i)} className="rounded-lg border border-slate-700 px-2 py-1 text-xs">Sửa</button><button onClick={() => void removeItem(i.id)} className="rounded-lg border border-red-900 px-2 py-1 text-xs text-red-300">Xóa</button></div> : '—'}</td></tr>)}
       </tbody></table></div>
       {items.length === 0 ? <p className="p-6 text-center text-slate-500">Đơn chưa có hàng.</p> : null}
     </section>

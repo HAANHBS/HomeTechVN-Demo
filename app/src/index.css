@@ -116,6 +116,20 @@ button {
   gap: 0.5rem;
 }
 
+.dashboard-quick-actions {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dashboard-quick-actions .global-home-button,
+.dashboard-quick-actions .global-qr-button {
+  min-height: 42px;
+  padding: 0.5rem 0.8rem;
+  box-shadow: none;
+}
+
 .global-home-button,
 .global-qr-button {
   display: inline-flex;
