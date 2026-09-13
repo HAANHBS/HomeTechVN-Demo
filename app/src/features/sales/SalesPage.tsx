@@ -141,7 +141,7 @@ function OrderDetail({
   const [customers, setCustomers] = useState<CustomerRow[]>([])
   const [products, setProducts] = useState<ProductInventorySummaryRow[]>([])
   const [editingItem, setEditingItem] = useState<SalesOrderItemRow | null>(null)
-  const [modal, setModal] = useState<'edit-order'|'add-item'|'payment'|'cancel'|null>(null)
+  const [modal, setModal] = useState<'edit-order'|'add-item'|'payment'|'payment-qr'|'cancel'|null>(null)
 
   useEffect(() => {
     if (initialAction === 'PAY') setModal('payment')
@@ -154,6 +154,7 @@ function OrderDetail({
   const canCancel = hasPermission(context, 'sale.cancel')
   const canPay = hasPermission(context, 'payment.create')
   const canRefund = hasPermission(context, 'payment.update')
+  const canManageSettings = hasPermission(context, 'settings.manage')
 
   const load = useCallback(async () => {
     setError(null)
@@ -265,6 +266,7 @@ function OrderDetail({
       {order.status === 'DRAFT' && canUpdate ? <button onClick={() => setModal('add-item')} className="rounded-xl border border-cyan-900 px-3 py-2 text-sm text-cyan-300">+ Hàng vào đơn</button> : null}
       {order.status === 'DRAFT' && canUpdate && items.length > 0 ? <button disabled={Boolean(busyAction)} onClick={() => void rpc('sale_confirm','xác nhận đơn')} className="rounded-xl bg-cyan-500 px-3 py-2 text-sm font-semibold text-slate-950">Xác nhận đơn</button> : null}
       {(order.status === 'CONFIRMED' || order.status === 'PAYMENT_PENDING') && canPay && (order.balance_due ?? 0) > 0 ? <button onClick={() => setModal('payment')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950">Thu tiền</button> : null}
+      {(order.status === 'CONFIRMED' || order.status === 'PAYMENT_PENDING') && canPay && (order.balance_due ?? 0) > 0 ? <button onClick={() => setModal('payment-qr')} className="rounded-xl border border-cyan-700 px-3 py-2 text-sm font-semibold text-cyan-200">QR thanh toán</button> : null}
       {order.status === 'PAID' && canUpdate ? <button disabled={Boolean(busyAction) || missingPreHandover.length > 0 || !paymentMatches} title={missingPreHandover.length ? 'Hoàn thành các mục kiểm tra bên dưới trước khi bàn giao' : undefined} onClick={() => void rpc('sale_deliver','bàn giao')} className="rounded-xl bg-violet-500 px-3 py-2 text-sm font-semibold text-white disabled:cursor-not-allowed disabled:opacity-40">Bàn giao</button> : null}
       {order.status === 'DELIVERED' && canUpdate ? <button disabled={Boolean(busyAction) || missingRequired.length > 0 || !paymentMatches} title={missingRequired.length ? 'Hoàn thành danh sách kiểm tra, gồm xác nhận khách đã nhận đủ hàng' : undefined} onClick={() => void rpc('sale_complete','hoàn tất')} className="rounded-xl bg-emerald-500 px-3 py-2 text-sm font-semibold text-slate-950 disabled:cursor-not-allowed disabled:opacity-40">Hoàn tất đơn</button> : null}
       {['DRAFT','CONFIRMED','PAYMENT_PENDING'].includes(order.status) && canCancel && order.paid_amount === 0 ? <button onClick={() => setModal('cancel')} className="rounded-xl border border-red-900 px-3 py-2 text-sm text-red-300">Hủy đơn</button> : null}
@@ -306,7 +308,7 @@ function OrderDetail({
     {modal === 'edit-order' ? <Modal title="Sửa đơn nháp" onClose={() => setModal(null)}><EditOrderForm order={order} customers={customers} canCreateCustomer={hasPermission(context, 'customer.create')} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
     {modal === 'add-item' ? <Modal title="Thêm hàng vào đơn" onClose={() => setModal(null)}><ItemForm orderId={order.id} products={products} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
     {editingItem ? <Modal title="Sửa hàng trong đơn" onClose={() => setEditingItem(null)}><ItemForm orderId={order.id} products={products} initial={editingItem} onCancel={() => setEditingItem(null)} onDone={() => { setEditingItem(null); void load() }} /></Modal> : null}
-    {modal === 'payment' ? <Modal title="Thu tiền" onClose={() => setModal(null)}><PaymentForm order={order} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
+    {modal === 'payment' || modal === 'payment-qr' ? <Modal title={modal === 'payment-qr' ? 'QR thanh toán' : 'Thu tiền'} onClose={() => setModal(null)}><PaymentForm order={order} initialMethod={modal === 'payment-qr' ? 'BANK_TRANSFER' : 'CASH'} canManageSettings={canManageSettings} onCancel={() => setModal(null)} onDone={() => { setModal(null); void load() }} /></Modal> : null}
     {modal === 'cancel' ? <Modal title="Hủy đơn" onClose={() => setModal(null)}><TextActionForm title="Không hủy được đơn" placeholder="Nhập lý do hủy…" submitLabel="Xác nhận hủy" onCancel={() => setModal(null)} onSubmit={async (reason) => { const { error: rpcError } = await supabase.rpc('sale_cancel',{p_order_id:order.id,p_reason:reason}); if (rpcError) throw rpcError; await load() }} /></Modal> : null}
   </div>
 }

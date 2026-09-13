@@ -1,15 +1,10 @@
-import { useCallback, useEffect, useMemo, useRef, useState, type FormEvent } from 'react'
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react'
 import QRCode from 'qrcode'
 import type {
   AppUserContext,
 } from '../../lib/permissions'
 import { hasPermission } from '../../lib/permissions'
 import type {
-  DeviceRow,
-  InventoryUnitRow,
-  RepairOrderSummaryRow,
-  SalesOrderItemRow,
-  SalesOrderSummaryRow,
   WarrantyClaimRow,
   WarrantyClaimSummaryRow,
   WarrantyStatusHistoryRow,
@@ -256,162 +251,6 @@ function WarrantyQrCard({ row, onClose }: { row: WarrantySummaryRow; onClose: ()
   </div>
 }
 
-function CreateWarrantyForm({
-  sales,
-  items,
-  repairs,
-  devices,
-  units,
-  onCancel,
-  onDone,
-}: {
-  sales: SalesOrderSummaryRow[]
-  items: SalesOrderItemRow[]
-  repairs: RepairOrderSummaryRow[]
-  devices: DeviceRow[]
-  units: InventoryUnitRow[]
-  onCancel: () => void
-  onDone: () => void
-}) {
-  const eligibleSales = sales.filter((x) => x.id && ['DELIVERED', 'COMPLETED'].includes(x.status ?? ''))
-  const eligibleRepairs = repairs.filter((x) => x.id && x.status === 'COMPLETED')
-  const [sourceType, setSourceType] = useState<'SALE' | 'REPAIR'>('SALE')
-  const [saleOrderId, setSaleOrderId] = useState(eligibleSales[0]?.id ?? '')
-  const saleItems = useMemo(() => items.filter((x) => x.sales_order_id === saleOrderId), [items, saleOrderId])
-  const [saleItemId, setSaleItemId] = useState(saleItems[0]?.id ?? '')
-  const selectedItem = useMemo(() => items.find((x) => x.id === saleItemId), [items, saleItemId])
-  const selectedSale = useMemo(() => sales.find((x) => x.id === saleOrderId), [sales, saleOrderId])
-  const itemUnits = useMemo(() => units.filter((u) => selectedItem?.inventory_unit_ids.includes(u.id)), [selectedItem, units])
-  const [inventoryUnitId, setInventoryUnitId] = useState(itemUnits[0]?.id ?? '')
-  const customerDevices = useMemo(() => devices.filter((d) => d.customer_id === selectedSale?.customer_id), [devices, selectedSale?.customer_id])
-  const [customerDeviceId, setCustomerDeviceId] = useState('')
-  const [repairId, setRepairId] = useState(eligibleRepairs[0]?.id ?? '')
-  const [months, setMonths] = useState('12')
-  const [startDate, setStartDate] = useState(new Date().toISOString().slice(0, 10))
-  const [coverage, setCoverage] = useState('Bảo hành tiêu chuẩn')
-  const [note, setNote] = useState('')
-  const [busy, setBusy] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-
-  useEffect(() => {
-    const first = items.find((x) => x.sales_order_id === saleOrderId)
-    setSaleItemId(first?.id ?? '')
-  }, [saleOrderId, items])
-  useEffect(() => {
-    const next = units.find((u) => selectedItem?.inventory_unit_ids.includes(u.id))
-    setInventoryUnitId(next?.id ?? '')
-  }, [selectedItem, units])
-  useEffect(() => {
-    setCustomerDeviceId('')
-  }, [saleOrderId])
-  useEffect(() => {
-    if (sourceType === 'SALE') {
-      setMonths(String(selectedItem?.warranty_months || 12))
-      setCoverage('Bảo hành tiêu chuẩn')
-    } else {
-      setMonths('3')
-      setCoverage('Bảo hành dịch vụ sửa chữa')
-    }
-  }, [sourceType, selectedItem?.warranty_months])
-
-  async function submit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault()
-    setBusy(true)
-    setError(null)
-    try {
-      if (sourceType === 'SALE') {
-        if (!saleItemId) throw new Error('Chưa chọn dòng hàng bán.')
-        if ((selectedItem?.inventory_unit_ids.length ?? 0) > 0 && !inventoryUnitId) throw new Error('Sản phẩm Serial cần chọn đúng Serial đã bán.')
-        const { error: rpcError } = await supabase.rpc('warranty_create_sale', {
-          p_sales_order_item_id: saleItemId,
-          p_inventory_unit_id: inventoryUnitId || undefined,
-          p_customer_device_id: customerDeviceId || undefined,
-          p_start_date: startDate,
-          p_warranty_months: Math.max(1, Number(months) || 1),
-          p_coverage: coverage.trim(),
-          p_note: note.trim() || undefined,
-        })
-        if (rpcError) throw rpcError
-      } else {
-        if (!repairId) throw new Error('Chưa chọn phiếu sửa chữa COMPLETED.')
-        const { error: rpcError } = await supabase.rpc('warranty_create_repair', {
-          p_repair_order_id: repairId,
-          p_start_date: startDate,
-          p_warranty_months: Math.max(1, Number(months) || 1),
-          p_coverage: coverage.trim(),
-          p_note: note.trim() || undefined,
-        })
-        if (rpcError) throw rpcError
-      }
-      onDone()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Không tạo được bảo hành.')
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  return <form className="space-y-4" onSubmit={submit}>
-    <div className="grid grid-cols-2 gap-2 rounded-xl border border-slate-800 bg-slate-950 p-1">
-      <button type="button" onClick={() => setSourceType('SALE')} className={`rounded-lg px-3 py-2 text-sm ${sourceType === 'SALE' ? 'bg-cyan-500 font-semibold text-slate-950' : ''}`}>Từ đơn bán</button>
-      <button type="button" onClick={() => setSourceType('REPAIR')} className={`rounded-lg px-3 py-2 text-sm ${sourceType === 'REPAIR' ? 'bg-cyan-500 font-semibold text-slate-950' : ''}`}>Từ sửa chữa</button>
-    </div>
-
-    {sourceType === 'SALE' ? <>
-      <label className="block text-sm font-medium">Đơn đã giao
-        <select required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={saleOrderId} onChange={(e) => setSaleOrderId(e.target.value)}>
-          <option value="">— Chọn đơn —</option>
-          {eligibleSales.map((x) => <option key={x.id!} value={x.id!}>{x.order_code} · {x.customer_name} · {viStatus(x.status)}</option>)}
-        </select>
-      </label>
-      <label className="block text-sm font-medium">Dòng hàng
-        <select required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={saleItemId} onChange={(e) => setSaleItemId(e.target.value)}>
-          <option value="">— Chọn sản phẩm —</option>
-          {saleItems.map((x) => <option key={x.id} value={x.id}>{x.sku_snapshot} · {x.product_name_snapshot} · BH {x.warranty_months} tháng</option>)}
-        </select>
-      </label>
-      {(selectedItem?.inventory_unit_ids.length ?? 0) > 0 ? <label className="block text-sm font-medium">Serial đã bán
-        <select required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={inventoryUnitId} onChange={(e) => setInventoryUnitId(e.target.value)}>
-          <option value="">— Chọn Serial —</option>
-          {itemUnits.map((u) => <option key={u.id} value={u.id}>{u.serial_number}</option>)}
-        </select>
-      </label> : null}
-      <label className="block text-sm font-medium">Gắn với thiết bị khách (không bắt buộc)
-        <select className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={customerDeviceId} onChange={(e) => setCustomerDeviceId(e.target.value)}>
-          <option value="">— Không gắn —</option>
-          {customerDevices.map((d) => <option key={d.id} value={d.id}>{d.device_code} · {d.device_type} {d.brand ?? ''} {d.model ?? ''} · {d.serial_number ?? '—'}</option>)}
-        </select>
-      </label>
-    </> : <label className="block text-sm font-medium">Phiếu sửa chữa COMPLETED
-      <select required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={repairId} onChange={(e) => setRepairId(e.target.value)}>
-        <option value="">— Chọn phiếu —</option>
-        {eligibleRepairs.map((x) => <option key={x.id!} value={x.id!}>{x.repair_code} · {x.customer_name} · {x.device_type} {x.brand ?? ''} {x.model ?? ''}</option>)}
-      </select>
-    </label>}
-
-    <div className="grid gap-4 sm:grid-cols-2">
-      <label className="text-sm font-medium">Ngày bắt đầu
-        <input type="date" required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
-      </label>
-      <label className="text-sm font-medium">Số tháng
-        <input type="number" min="1" max="120" required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={months} onChange={(e) => setMonths(e.target.value)} />
-      </label>
-    </div>
-    <label className="block text-sm font-medium">Phạm vi bảo hành
-      <input required className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={coverage} onChange={(e) => setCoverage(e.target.value)} />
-    </label>
-    <label className="block text-sm font-medium">Ghi chú
-      <textarea className="mt-2 min-h-20 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} />
-    </label>
-    <p className="text-xs text-slate-500">Nguồn SERVICE đã được schema hỗ trợ nhưng sẽ kích hoạt ở T8 khi module dịch vụ tồn tại.</p>
-    <div className="flex justify-end gap-2">
-      <button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button>
-      <button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950 disabled:opacity-50">{busy ? 'Đang tạo…' : 'Tạo bảo hành'}</button>
-    </div>
-    <ErrorPanel message={error} />
-  </form>
-}
-
 function CreateClaimForm({ warrantyId, onCancel, onDone }: { warrantyId: string; onCancel: () => void; onDone: () => void }) {
   const [issue, setIssue] = useState('')
   const [condition, setCondition] = useState('')
@@ -429,7 +268,7 @@ function CreateClaimForm({ warrantyId, onCancel, onDone }: { warrantyId: string;
       })
       if (rpcError) throw rpcError
       onDone()
-    } catch (err) { setError(err instanceof Error ? err.message : 'Không tiếp nhận được claim.') }
+    } catch (err) { setError(err instanceof Error ? err.message : 'Không tiếp nhận được yêu cầu bảo hành.') }
     finally { setBusy(false) }
   }
   return <form className="space-y-4" onSubmit={submit}>
@@ -442,7 +281,7 @@ function CreateClaimForm({ warrantyId, onCancel, onDone }: { warrantyId: string;
     <label className="block text-sm font-medium">Yêu cầu khách hàng
       <input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={request} onChange={(e) => setRequest(e.target.value)} />
     </label>
-    <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">Tiếp nhận claim</button></div>
+    <div className="flex justify-end gap-2"><button type="button" onClick={onCancel} className="rounded-xl border border-slate-700 px-4 py-2">Đóng</button><button disabled={busy} className="rounded-xl bg-cyan-500 px-4 py-2 font-semibold text-slate-950">Tiếp nhận yêu cầu</button></div>
     <ErrorPanel message={error} />
   </form>
 }
@@ -554,17 +393,10 @@ export function WarrantyPage({
   onOpenRepair?: () => void
   onOpenChecklist?: () => void
 }) {
-  const canManage = hasPermission(context,'warranty.manage')
   const [tab,setTab] = useState<Tab>(initialTarget?.resource_type === 'WARRANTY_CLAIM' ? 'claims' : 'warranties')
   const [warranties,setWarranties] = useState<WarrantySummaryRow[]>([])
   const [claims,setClaims] = useState<WarrantyClaimSummaryRow[]>([])
-  const [sales,setSales] = useState<SalesOrderSummaryRow[]>([])
-  const [saleItems,setSaleItems] = useState<SalesOrderItemRow[]>([])
-  const [repairs,setRepairs] = useState<RepairOrderSummaryRow[]>([])
-  const [devices,setDevices] = useState<DeviceRow[]>([])
-  const [units,setUnits] = useState<InventoryUnitRow[]>([])
   const [search,setSearch] = useState('')
-  const [showCreate,setShowCreate] = useState(initialAction === 'CREATE' && initialTarget?.resource_type === 'WARRANTY')
   const [warrantyId,setWarrantyId] = useState<string|null>(initialTarget?.resource_type === 'WARRANTY' ? initialTarget.resource_id ?? null : null)
   const [claimId,setClaimId] = useState<string|null>(initialTarget?.resource_type === 'WARRANTY_CLAIM' ? initialTarget.resource_id ?? null : null)
   const [error,setError] = useState<string|null>(null)
@@ -572,24 +404,13 @@ export function WarrantyPage({
   const load = useCallback(async () => {
     setError(null)
     try {
-      const [w,c,s,i,r,d,u] = await Promise.all([
+      const [w,c] = await Promise.all([
         supabase.from('warranty_summary').select('*').order('created_at',{ascending:false}).limit(1000),
         supabase.from('warranty_claim_summary').select('*').order('created_at',{ascending:false}).limit(1000),
-        supabase.from('sales_order_summary').select('*').order('created_at',{ascending:false}).limit(750),
-        supabase.from('sales_order_items').select('*').order('created_at',{ascending:false}).limit(1500),
-        supabase.from('repair_order_summary').select('*').order('created_at',{ascending:false}).limit(750),
-        supabase.from('customer_devices').select('*').eq('status','ACTIVE').order('created_at',{ascending:false}).limit(1500),
-        supabase.from('inventory_units').select('*').order('created_at',{ascending:false}).limit(2500),
       ])
       if(w.error) throw w.error
       if(c.error) throw c.error
-      // Source lists may be RLS-empty for some warranty viewers; errors should still be surfaced.
-      if(s.error) throw s.error
-      if(i.error) throw i.error
-      if(r.error) throw r.error
-      if(d.error) throw d.error
-      if(u.error) throw u.error
-      setWarranties(w.data); setClaims(c.data); setSales(s.data); setSaleItems(i.data); setRepairs(r.data); setDevices(d.data); setUnits(u.data)
+      setWarranties(w.data); setClaims(c.data)
     } catch(err) { setError(err instanceof Error?err.message:'Không tải được Warranty.') }
   },[])
   useEffect(() => { void load() },[load])
@@ -597,7 +418,6 @@ export function WarrantyPage({
     if (initialTarget?.resource_type === 'WARRANTY') {
       setTab('warranties')
       if (initialTarget.resource_id) setWarrantyId(initialTarget.resource_id)
-      if (initialAction === 'CREATE') setShowCreate(true)
     } else if (initialTarget?.resource_type === 'WARRANTY_CLAIM') {
       setTab('claims')
       if (initialTarget.resource_id) setClaimId(initialTarget.resource_id)
@@ -616,11 +436,11 @@ export function WarrantyPage({
     <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6">
       {claimId ? <ClaimDetail claimId={claimId} context={context} onBack={() => setClaimId(null)} onChanged={() => void load()} /> : selectedWarranty ? <WarrantyDetail row={selectedWarranty} context={context} claims={claims} onBack={() => setWarrantyId(null)} onOpenClaim={setClaimId} onChanged={() => void load()} /> : <div className="space-y-5">
         <WarrantyScanner onOpenWarranty={(id)=>{setTab('warranties');setWarrantyId(id)}} />
-        <div className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 lg:flex-row"><div className="flex gap-2"><button onClick={() => setTab('warranties')} className={`rounded-xl px-4 py-2 text-sm ${tab==='warranties'?'bg-cyan-500 font-semibold text-slate-950':'border border-slate-700'}`}>Bảo hành</button><button onClick={() => setTab('claims')} className={`rounded-xl px-4 py-2 text-sm ${tab==='claims'?'bg-cyan-500 font-semibold text-slate-950':'border border-slate-700'}`}>Yêu cầu xử lý</button></div><input className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2" placeholder="Tìm mã, khách, điện thoại, số sê-ri, trạng thái…" value={search} onChange={(e)=>setSearch(e.target.value)} /><button onClick={() => { setSearch(''); void load() }} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Đặt lại</button>{canManage && tab==='warranties'?<button onClick={() => setShowCreate(true)} className="rounded-xl bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950">+ Tạo mới</button>:null}</div>
+        <div className="rounded-2xl border border-cyan-900 bg-cyan-950/20 p-4 text-sm text-cyan-100"><strong>Bảo hành được tạo tự động theo nghiệp vụ nguồn.</strong><div className="mt-1 text-cyan-200/80">Đơn bán sinh bảo hành khi bàn giao; phiếu sửa sinh bảo hành công sửa và từng linh kiện đủ chính sách. Không cần lập lại hồ sơ tại màn hình này.</div></div>
+        <div className="flex flex-col gap-3 rounded-2xl border border-slate-800 bg-slate-900 p-4 lg:flex-row"><div className="flex gap-2"><button onClick={() => setTab('warranties')} className={`rounded-xl px-4 py-2 text-sm ${tab==='warranties'?'bg-cyan-500 font-semibold text-slate-950':'border border-slate-700'}`}>Bảo hành</button><button onClick={() => setTab('claims')} className={`rounded-xl px-4 py-2 text-sm ${tab==='claims'?'bg-cyan-500 font-semibold text-slate-950':'border border-slate-700'}`}>Yêu cầu xử lý</button></div><input className="min-w-0 flex-1 rounded-xl border border-slate-700 bg-slate-950 px-4 py-2" placeholder="Tìm mã, khách, điện thoại, số sê-ri, trạng thái…" value={search} onChange={(e)=>setSearch(e.target.value)} /><button onClick={() => { setSearch(''); void load() }} className="rounded-xl border border-slate-700 px-4 py-2 text-sm">Đặt lại</button></div>
         {tab==='warranties'?<section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"><div className="overflow-x-auto"><table className="w-full min-w-[1100px] text-left text-sm"><thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Bảo hành</th><th className="px-4 py-3">Khách</th><th className="px-4 py-3">Sản phẩm / số sê-ri</th><th className="px-4 py-3">Nguồn</th><th className="px-4 py-3">Hiệu lực</th><th className="px-4 py-3">Yêu cầu</th><th className="px-4 py-3 text-right">Mở</th></tr></thead><tbody>{filteredW.map((w)=>w.id?<tr key={w.id} className="border-t border-slate-800"><td className="px-4 py-3 font-mono text-cyan-300">{w.warranty_code}</td><td className="px-4 py-3"><div className="text-white">{w.customer_name}</div><div className="text-xs text-slate-500">{w.customer_code} · {w.phone||'—'}</div></td><td className="px-4 py-3"><div>{w.product_name_snapshot||[w.device_type,w.brand,w.model].filter(Boolean).join(' ')||'—'}</div><div className="font-mono text-xs text-slate-500">{w.serial_snapshot||w.device_serial||'—'}</div></td><td className="px-4 py-3">{w.source_type}</td><td className="px-4 py-3"><span title={w.effective_status ?? undefined} className={`rounded-lg px-2 py-1 text-xs ${statusClass(w.effective_status)}`}>{viStatus(w.effective_status)}</span><div className="mt-1 text-xs text-slate-500">{dateOnly(w.start_date)} → {dateOnly(w.end_date)}</div></td><td className="px-4 py-3">{w.claim_count??0} · {viStatus(w.latest_claim_status)}</td><td className="px-4 py-3 text-right"><button onClick={()=>setWarrantyId(w.id!)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs">Chi tiết</button></td></tr>:null)}</tbody></table></div>{filteredW.length===0?<p className="p-8 text-center text-slate-500">Chưa có bảo hành.</p>:null}</section>:<section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900"><div className="overflow-x-auto"><table className="w-full min-w-[1000px] text-left text-sm"><thead className="bg-slate-950/60 text-xs uppercase text-slate-500"><tr><th className="px-4 py-3">Yêu cầu</th><th className="px-4 py-3">Bảo hành</th><th className="px-4 py-3">Khách</th><th className="px-4 py-3">Lỗi</th><th className="px-4 py-3">Trạng thái</th><th className="px-4 py-3">Tiếp nhận</th><th className="px-4 py-3 text-right">Mở</th></tr></thead><tbody>{filteredC.map((c)=>c.id?<tr key={c.id} className="border-t border-slate-800"><td className="px-4 py-3 font-mono text-cyan-300">{c.claim_code}</td><td className="px-4 py-3 font-mono text-xs">{c.warranty_code}</td><td className="px-4 py-3">{c.customer_name}<div className="text-xs text-slate-500">{c.phone||'—'}</div></td><td className="px-4 py-3">{c.issue_description}</td><td className="px-4 py-3"><span title={c.status ?? undefined} className={`rounded-lg px-2 py-1 text-xs ${statusClass(c.status)}`}>{viStatus(c.status)}</span></td><td className="px-4 py-3 text-slate-400">{dateTime(c.received_at)}</td><td className="px-4 py-3 text-right"><button onClick={()=>setClaimId(c.id!)} className="rounded-lg border border-slate-700 px-3 py-1 text-xs">Chi tiết</button></td></tr>:null)}</tbody></table></div>{filteredC.length===0?<p className="p-8 text-center text-slate-500">Chưa có yêu cầu bảo hành.</p>:null}</section>}
         <ErrorPanel message={error} />
       </div>}
     </div>
-    {showCreate?<Modal title="Tạo bảo hành" onClose={()=>setShowCreate(false)}><CreateWarrantyForm sales={sales} items={saleItems} repairs={repairs} devices={devices} units={units} onCancel={()=>setShowCreate(false)} onDone={()=>{setShowCreate(false);void load()}} /></Modal>:null}
   </main>
 }

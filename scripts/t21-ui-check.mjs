@@ -54,8 +54,8 @@ for (const [relative, digest] of [
 }
 
 const migrations = fs.readdirSync(path.join(root, 'supabase', 'migrations')).filter((name) => name.endsWith('.sql')).sort()
-if (migrations.length !== 40) fail(`T21.1 is UI-only and must keep exactly 40 migrations; found ${migrations.length}`)
-if (!failed) console.log('T21 LOCKED MIGRATION REGRESSION: PASS (#1-#40 unchanged; #41 still free)')
+if (migrations.length < 40) fail(`T21.1 requires the 40-migration baseline; found ${migrations.length}`)
+if (!failed) console.log('T21 LOCKED MIGRATION REGRESSION: PASS (#1-#40 unchanged)')
 
 const picker = requireTokens('app/src/features/crm/forms.tsx', [
   'export function CustomerQuickPicker',
@@ -113,10 +113,10 @@ const rootPackage = JSON.parse(read('package.json'))
 const appPackage = JSON.parse(read('app/package.json'))
 const rootLock = JSON.parse(read('package-lock.json'))
 const appLock = JSON.parse(read('app/package-lock.json'))
-if (rootPackage.version !== '0.21.3-t21.3' || rootLock.version !== rootPackage.version || rootLock.packages?.['']?.version !== rootPackage.version) {
+if (rootPackage.version !== '0.21.4-t21.4' || rootLock.version !== rootPackage.version || rootLock.packages?.['']?.version !== rootPackage.version) {
   fail('root package/lock version mismatch')
 }
-if (appPackage.version !== '0.21.3' || appLock.version !== appPackage.version || appLock.packages?.['']?.version !== appPackage.version) {
+if (appPackage.version !== '0.21.4' || appLock.version !== appPackage.version || appLock.packages?.['']?.version !== appPackage.version) {
   fail('app package/lock version mismatch')
 }
 for (const script of ['t21:ui-check', 't21:verify', 't21.2:ui-check', 't21.3:ui-check']) {

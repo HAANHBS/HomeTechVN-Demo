@@ -8,6 +8,7 @@ import type {
 } from '../../lib/database.types'
 import { supabase } from '../../lib/supabase'
 import { CustomerQuickPicker } from '../crm/forms'
+import { PaymentQr } from './PaymentQr'
 
 function parseNumber(value: string) {
   const n = Number(value)
@@ -252,15 +253,19 @@ export function ItemForm({
 
 export function PaymentForm({
   order,
+  initialMethod = 'CASH',
+  canManageSettings,
   onCancel,
   onDone,
 }: {
   order: SalesOrderRow
+  initialMethod?: 'CASH' | 'BANK_TRANSFER'
+  canManageSettings: boolean
   onCancel: () => void
   onDone: () => void
 }) {
   const amount = Number(order.balance_due ?? 0)
-  const [method, setMethod] = useState('CASH')
+  const [method, setMethod] = useState<string>(initialMethod)
   const [reference, setReference] = useState('')
   const [note, setNote] = useState('')
   const [busy, setBusy] = useState(false)
@@ -312,13 +317,14 @@ export function PaymentForm({
         </select>
       </label>
     </div>
+    {method === 'BANK_TRANSFER' ? <PaymentQr amount={amount} orderCode={order.order_code} canManageSettings={canManageSettings} /> : null}
     <label className="block text-sm font-medium">Mã tham chiếu
       <input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={reference} onChange={(e) => setReference(e.target.value)} />
     </label>
     <label className="block text-sm font-medium">Ghi chú
       <input className="mt-2 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2" value={note} onChange={(e) => setNote(e.target.value)} />
     </label>
-    <Actions busy={busy} onCancel={onCancel} label={`Thu đủ ${new Intl.NumberFormat('vi-VN').format(amount)} đ`} />
+    <Actions busy={busy} onCancel={onCancel} label={`Xác nhận đã nhận đủ ${new Intl.NumberFormat('vi-VN').format(amount)} đ`} />
     <ErrorBox message={error} />
   </form>
 }

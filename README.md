@@ -1,7 +1,9 @@
-# HomeTechVN Management — T21.3 Repair Flow
+# HomeTechVN Management — T21.4 Payment QR
 
-Current release: `0.21.3-t21.3`. Migrations #1–#40 are deployed and locked;
-T21.3 is UI-only, so migration #41 remains free for T22.
+Current release: `0.21.4-t21.4`. Migrations #1–#40 remain hash-locked;
+the production T22 migrations #41–#44 are now aligned back into source. T21.4
+adds migrations #45–#46 for shared, RBAC-protected VietQR receiving-account
+configuration and `SECURITY INVOKER` hardening.
 Payment totals, ledger reconciliation, workflow prerequisites, automatic sale
 warranty and authenticated serial/QR warranty scanning are accepted against
 hosted fictional data. Demo Admin receives all application RBAC permissions;
@@ -14,9 +16,11 @@ editing, RBAC-gated staff management and Vietnamese operational labels.
 T21.3 fixes repair quoting so blank cost components remain zero, previews labor,
 parts, discount and customer total separately, and provides one contextual
 `Tiếp tục thực hiện` action for the valid next repair step.
+T21.4 generates a bank QR from the exact remaining sales balance and order
+reference without automatically confirming that funds were received.
 
 From T20.2 onward acceptance is automated on the hosted fake-data project. PC or
-Windows acceptance is not required. See `docs/T21_3_REPAIR_FLOW.md`, `docs/T21_2_BRANCH_CONSOLIDATION.md`,
+Windows acceptance is not required. See `docs/T21_4_PAYMENT_QR.md`, `docs/T21_3_REPAIR_FLOW.md`, `docs/T21_2_BRANCH_CONSOLIDATION.md`,
 `docs/T21_ROADMAP.md`, `docs/T20_STATUS.md` and `docs/T20_RUNBOOK.md`.
 
 ---

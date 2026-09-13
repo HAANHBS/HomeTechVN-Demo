@@ -27,7 +27,7 @@ function requireTokens(relative, tokens) {
 }
 
 const migrations = fs.readdirSync(path.join(root, 'supabase', 'migrations')).filter((name) => name.endsWith('.sql'))
-if (migrations.length !== 40) fail(`T21.3 is UI-only and must keep 40 migrations; found ${migrations.length}`)
+if (migrations.length < 40) fail(`T21.3 requires the 40-migration baseline; found ${migrations.length}`)
 
 const forms = requireTokens('app/src/features/repair/forms.tsx', [
   "const[labor,setLabor]=useState('')",
@@ -86,15 +86,15 @@ for (const scenario of [
 
 const rootPackage = JSON.parse(read('package.json'))
 const appPackage = JSON.parse(read('app/package.json'))
-if (rootPackage.version !== '0.21.3-t21.3') fail('root version must be 0.21.3-t21.3')
-if (appPackage.version !== '0.21.3') fail('app version must be 0.21.3')
+if (rootPackage.version !== '0.21.4-t21.4') fail('root version must be 0.21.4-t21.4')
+if (appPackage.version !== '0.21.4') fail('app version must be 0.21.4')
 
 if (!failed) {
   console.log('T21.3 REPAIR QUOTE AMOUNT CONTRACT: PASS')
   console.log('T21.3 LABOR-ONLY 100000 + PARTS 0 = 100000: PASS')
   console.log('T21.3 GUIDED CONTINUE STATE/RBAC CONTRACT: PASS')
   console.log('T21.3 VIETNAMESE EXCEPTION ACTIONS: PASS')
-  console.log('T21.3 MIGRATION REGRESSION: PASS (#1-#40 unchanged; #41 free)')
+  console.log('T21.3 MIGRATION REGRESSION: PASS (#1-#40 unchanged)')
 }
 
 process.exit(failed ? 1 : 0)

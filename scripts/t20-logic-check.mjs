@@ -58,8 +58,8 @@ const salesForms=requireTokens('app/src/features/sales/forms.tsx',[
   'readOnly aria-readonly="true"',
   'Khóa theo số còn phải thu để không lệch giá bán.',
   'Math.round(Number(updatedOrder.paid_amount) * 100) !== Math.round(Number(updatedOrder.total_amount) * 100)',
-  'Thu đủ ${new Intl.NumberFormat',
 ])
+if(!salesForms.includes('Thu đủ ${new Intl.NumberFormat')&&!salesForms.includes('Xác nhận đã nhận đủ ${new Intl.NumberFormat'))fail('exact-balance payment action label is missing')
 // The exact button label is dynamic in T20.1; reject the old editable amount contract.
 if(salesForms.includes('onChange={(e) => setAmount(e.target.value)}'))fail('payment amount remains user-editable')
 if(count(salesForms,/<Actions[^>]+\/>\s*<ErrorBox message=\{error\} \/>/g)<5)fail('sales form errors are not consistently below action buttons')

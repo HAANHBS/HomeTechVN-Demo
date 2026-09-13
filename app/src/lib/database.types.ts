@@ -1478,6 +1478,19 @@ export type Database = {
         }
         Returns: Json
       }
+      payment_qr_config_get: {
+        Args: Record<PropertyKey, never>
+        Returns: Json
+      }
+      payment_qr_configure: {
+        Args: {
+          p_enabled: boolean
+          p_bank_id: string
+          p_account_no: string
+          p_account_name: string
+        }
+        Returns: Json
+      }
       sale_refund_payment: {
         Args: { p_payment_id: string; p_refund_note: string }
         Returns: Json
@@ -1593,16 +1606,8 @@ export type Database = {
         Args: { p_run_id: string; p_note: string }
         Returns: Json
       }
-      warranty_create_sale: {
-        Args: { p_sales_order_item_id: string; p_inventory_unit_id?: string; p_customer_device_id?: string; p_start_date?: string; p_warranty_months?: number; p_coverage?: string; p_note?: string }
-        Returns: Json
-      }
       warranty_scan_product: {
         Args: { p_query: string }
-        Returns: Json
-      }
-      warranty_create_repair: {
-        Args: { p_repair_order_id: string; p_start_date?: string; p_warranty_months?: number; p_coverage?: string; p_note?: string }
         Returns: Json
       }
       warranty_void: { Args: { p_warranty_id: string; p_reason: string }; Returns: Json }

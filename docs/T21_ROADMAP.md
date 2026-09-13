@@ -2,7 +2,7 @@
 
 Nguồn đề xuất: `goiyhethong.txt` do chủ dự án cung cấp ngày 2026-09-10.
 
-Baseline: T20.2 `COMPLETE & LOCKED`; migrations #1–#40 bất biến; migration tiếp theo là #41. Từ T20.2 trở đi chỉ nghiệm thu tự động trên hosted demo dùng dữ liệu hoàn toàn giả định, không yêu cầu nghiệm thu PC.
+Baseline: T20.2 `COMPLETE & LOCKED`; migrations #1–#40 bất biến. Production đã có T22 migrations #41–#44; T21.4 dùng migration #45 cho cấu hình QR thanh toán. Từ T20.2 trở đi chỉ nghiệm thu tự động trên hosted demo dùng dữ liệu hoàn toàn giả định, không yêu cầu nghiệm thu PC.
 
 ## Quyết định áp dụng
 
@@ -51,14 +51,21 @@ Baseline: T20.2 `COMPLETE & LOCKED`; migrations #1–#40 bất biến; migration
 - Chặn báo giá rỗng và chặn giảm giá vượt tiền công cộng tiền linh kiện trước khi gọi RPC.
 - Một nút `Tiếp tục thực hiện` tự dẫn đến bước hợp lệ kế tiếp theo trạng thái, dữ liệu và RBAC.
 - Các nhánh ngoại lệ vẫn tách riêng: chờ linh kiện, không sửa được, chuyển bảo hành và hủy phiếu.
-- Không có migration; #41 vẫn để trống cho T22.
+- Không có migration tại T21.3.
+
+### T21.4 — Exact-balance payment QR (`COMPLETE`)
+
+- QR chuyển khoản lấy đúng số tiền còn phải thu và mã đơn.
+- Admin cấu hình tài khoản nhận dùng chung; Thu ngân chỉ đọc theo RBAC.
+- QR không tự xác nhận tiền đã vào tài khoản.
+- Migrations #45–#46; migrations #1–#44 giữ nguyên hash và đồng bộ với production.
 
 ### T22 — Warranty policy engine
 
 - Chính sách bảo hành theo sản phẩm/danh mục/dịch vụ.
 - Nút nhanh 7/15 ngày, 1/3 tháng và tùy chỉnh.
 - Bảo hành sửa chữa tách linh kiện/công.
-- Migration bắt đầu từ #41; verifier chống trùng/phủ sai thời gian.
+- Production đã triển khai migrations #41–#44; verifier chống trùng/phủ sai thời gian.
 
 ### T23 — After-sales orchestrator
 

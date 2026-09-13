@@ -27,7 +27,7 @@ function requireTokens(relative, tokens) {
 }
 
 const migrations = fs.readdirSync(path.join(root, 'supabase', 'migrations')).filter((name) => name.endsWith('.sql'))
-if (migrations.length !== 40) fail(`T21.2 is UI-only and must keep 40 migrations; found ${migrations.length}`)
+if (migrations.length < 40) fail(`T21.2 requires the 40-migration baseline; found ${migrations.length}`)
 
 requireTokens('app/src/App.tsx', [
   "type Module = 'dashboard' | 'reports' | 'audit' | 'staff'",
@@ -102,15 +102,15 @@ for (const relative of topLevelPages) {
 
 const appPackage = JSON.parse(read('app/package.json'))
 const rootPackage = JSON.parse(read('package.json'))
-if (appPackage.version !== '0.21.3') fail('app version must be 0.21.3')
-if (rootPackage.version !== '0.21.3-t21.3') fail('root version must be 0.21.3-t21.3')
+if (appPackage.version !== '0.21.4') fail('app version must be 0.21.4')
+if (rootPackage.version !== '0.21.4-t21.4') fail('root version must be 0.21.4-t21.4')
 
 if (!failed) {
   console.log('T21.2 BRANCH REQUIREMENT MATRIX: PASS')
   console.log('T21.2 RBAC STAFF MANAGEMENT CONTRACT: PASS')
   console.log('T21.2 QUICK INTAKE/ORDER UX CONTRACT: PASS')
   console.log('T21.2 VIETNAMESE UI CONTRACT: PASS')
-  console.log('T21.2 MIGRATION REGRESSION: PASS (#1-#40 unchanged; #41 free)')
+  console.log('T21.2 MIGRATION REGRESSION: PASS (#1-#40 unchanged)')
 }
 
 process.exit(failed ? 1 : 0)
