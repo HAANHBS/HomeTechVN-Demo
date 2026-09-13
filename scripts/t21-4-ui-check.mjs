@@ -102,6 +102,12 @@ requireTokens('app/src/features/sales/SalesPage.tsx',[
   "initialMethod={modal === 'payment-qr' ? 'BANK_TRANSFER' : 'CASH'}",
   "hasPermission(context, 'settings.manage')",
 ])
+requireTokens('app/src/features/repair/RepairPage.tsx',[
+  "['READY','RETURNED'].includes(order.status)",
+  'paymentQrAmount=Number(order.final_amount||order.approved_amount||0)',
+  '<PaymentQr amount={paymentQrAmount} orderCode={order.repair_code} canManageSettings={canManageSettings}/>',
+  'QR thanh toán {money(paymentQrAmount)}',
+])
 requireTokens('app/src/lib/database.types.ts',['payment_qr_config_get:','payment_qr_configure:'])
 
 const rootPackage = JSON.parse(read('package.json'))
@@ -114,6 +120,7 @@ if (!failed) {
   console.log('T21.4 SECURITY INVOKER HARDENING #46: PASS')
   console.log('T21.4 PAYMENT QR CONFIG/RBAC CONTRACT: PASS')
   console.log('T21.4 EXACT BALANCE + ORDER REFERENCE QR: PASS')
+  console.log('T21.4 REPAIR HANDOVER QR AMOUNT: PASS')
   console.log('T21.4 NO AUTOMATIC PAYMENT CONFIRMATION: PASS')
 }
 

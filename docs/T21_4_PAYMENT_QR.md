@@ -9,6 +9,10 @@ Trạng thái: `COMPLETE`
 - QR lấy chính xác `sales_orders.balance_due`; nhân viên không tự nhập lại số
   tiền nên không thể lệch với giá bán hoặc khoản đã thu trước đó.
 - Nội dung chuyển khoản là `HTVN <mã đơn>` để đối chiếu giao dịch.
+- Phiếu sửa chữa có QR ở bước `READY` hoặc `RETURNED`, lấy `final_amount`
+  (nếu chưa có thì dùng `approved_amount`) và nội dung `HTVN <mã phiếu>`.
+- QR sửa chữa phục vụ thanh toán lúc bàn giao; không tự tạo sổ thu hoặc đánh dấu
+  phiếu đã thanh toán khi chưa có nghiệp vụ đối soát riêng.
 - Sau khi khách quét, nhân viên phải kiểm tra tiền thực sự vào tài khoản rồi mới
   nhấn `Xác nhận đã nhận đủ ...`. Việc hiển thị/quét QR tuyệt đối không gọi RPC
   ghi nhận thanh toán.

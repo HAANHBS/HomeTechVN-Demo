@@ -8,13 +8,14 @@ import { CreateRepairForm, DiagnosticForm, PartForm, QCForm, QuoteForm, TextActi
 import type { QrAction, QrResolved } from '../qr/QrCommandCenter'
 import { WorkflowGuide, type WorkflowBlocker, type WorkflowGuideStep } from '../../components/WorkflowGuide'
 import { viPriority, viStatus } from '../../lib/vi'
+import { PaymentQr } from '../sales/PaymentQr'
 
 function money(v:number|null|undefined){return new Intl.NumberFormat('vi-VN',{style:'currency',currency:'VND',maximumFractionDigits:0}).format(v??0)}
 function dt(v:string|null|undefined){return v?new Date(v).toLocaleString('vi-VN'):'—'}
 function statusClass(s:string|null|undefined){if(s==='COMPLETED'||s==='READY')return'bg-emerald-950 text-emerald-300';if(['CANCELLED','CUSTOMER_REJECTED','NO_FIX'].includes(s??''))return'bg-red-950 text-red-300';if(s==='WAITING_PART'||s==='AWAITING_CUSTOMER')return'bg-amber-950 text-amber-300';if(s==='WARRANTY_TRANSFER')return'bg-violet-950 text-violet-300';return'bg-slate-800 text-slate-300'}
 function Err({message}:{message:string|null}){return message?<div role="alert" aria-live="assertive" className="rounded-xl border border-red-900 bg-red-950/30 p-3 text-sm text-red-200">{message}</div>:null}
 
-type ModalName='create'|'diagnostic'|'quote'|'part'|'waiting'|'qc'|'cancel'|'nofix'|'warranty'|'decision'|'decision-approve'|'decision-reject'|null
+type ModalName='create'|'diagnostic'|'quote'|'part'|'waiting'|'qc'|'cancel'|'nofix'|'warranty'|'decision'|'decision-approve'|'decision-reject'|'payment-qr'|null
 
 function RepairList({context,onOpen,initialCreate=false}:{context:AppUserContext;onOpen:(id:string)=>void;initialCreate?:boolean}){
  const[rows,setRows]=useState<RepairOrderSummaryRow[]>([]);const[customers,setCustomers]=useState<CustomerRow[]>([]);const[devices,setDevices]=useState<DeviceRow[]>([]);const[search,setSearch]=useState('');const[status,setStatus]=useState('ALL');const[showCreate,setShowCreate]=useState(false);const[loading,setLoading]=useState(true);const[error,setError]=useState<string|null>(null)
@@ -29,7 +30,7 @@ function RepairList({context,onOpen,initialCreate=false}:{context:AppUserContext
 
 function RepairDetail({orderId,context,onBack}:{orderId:string;context:AppUserContext;onBack:()=>void}){
  const[order,setOrder]=useState<RepairOrderRow|null>(null);const[customer,setCustomer]=useState<CustomerRow|null>(null);const[device,setDevice]=useState<DeviceRow|null>(null);const[diagnostics,setDiagnostics]=useState<RepairDiagnosticRow[]>([]);const[quotes,setQuotes]=useState<RepairQuoteRow[]>([]);const[parts,setParts]=useState<RepairPartRow[]>([]);const[history,setHistory]=useState<RepairStatusHistoryRow[]>([]);const[products,setProducts]=useState<ProductInventorySummaryRow[]>([]);const[modal,setModal]=useState<ModalName>(null);const[error,setError]=useState<string|null>(null);const[busy,setBusy]=useState<string|null>(null)
- const canDiagnose=hasPermission(context,'repair.diagnose'),canQuote=hasPermission(context,'repair.quote'),canUpdate=hasPermission(context,'repair.update'),canQc=hasPermission(context,'repair.qc'),canCancel=hasPermission(context,'repair.cancel'),canIssue=hasPermission(context,'inventory.issue')
+ const canDiagnose=hasPermission(context,'repair.diagnose'),canQuote=hasPermission(context,'repair.quote'),canUpdate=hasPermission(context,'repair.update'),canQc=hasPermission(context,'repair.qc'),canCancel=hasPermission(context,'repair.cancel'),canIssue=hasPermission(context,'inventory.issue'),canPay=hasPermission(context,'payment.create'),canManageSettings=hasPermission(context,'settings.manage')
  const load=useCallback(async()=>{setError(null);try{const o=await supabase.from('repair_orders').select('*').eq('id',orderId).single();if(o.error)throw o.error;const[di,q,p,h,c,d,prod]=await Promise.all([supabase.from('repair_diagnostics').select('*').eq('repair_order_id',orderId).order('created_at'),supabase.from('repair_quotes').select('*').eq('repair_order_id',orderId).order('version',{ascending:false}),supabase.from('repair_parts').select('*').eq('repair_order_id',orderId).order('created_at'),supabase.from('repair_status_history').select('*').eq('repair_order_id',orderId).order('changed_at',{ascending:false}),supabase.from('customers').select('*').eq('id',o.data.customer_id).single(),supabase.from('customer_devices').select('*').eq('id',o.data.customer_device_id).single(),supabase.from('product_inventory_summary').select('*').eq('is_active',true).order('name').limit(1000)]);if(di.error)throw di.error;if(q.error)throw q.error;if(p.error)throw p.error;if(h.error)throw h.error;if(c.error)throw c.error;if(d.error)throw d.error;if(prod.error)throw prod.error;setOrder(o.data);setDiagnostics(di.data);setQuotes(q.data);setParts(p.data);setHistory(h.data);setCustomer(c.data);setDevice(d.data);setProducts(prod.data)}catch(err){setError(err instanceof Error?err.message:'Không tải được phiếu sửa chữa.')}},[orderId])
  useEffect(()=>{void load()},[load])
  async function orderRpc(name:'repair_start_diagnosis'|'repair_start_repair'|'repair_start_qc'|'repair_mark_returned'|'repair_complete'|'repair_resume_warranty',label:string){if(!order)return;setBusy(label);setError(null);try{const{error:rpcError}=await supabase.rpc(name,{p_order_id:order.id});if(rpcError)throw rpcError;await load()}catch(err){setError(err instanceof Error?err.message:`Không thể ${label}.`)}finally{setBusy(null)}}
@@ -43,6 +44,7 @@ function RepairDetail({orderId,context,onBack}:{orderId:string;context:AppUserCo
  const hasDiagnosis=diagnostics.some(d=>d.stage==='DIAGNOSIS')
  const pendingParts=parts.filter(p=>p.status==='PLANNED')
  const hasApprovedQuote=Boolean(order.approved_quote_id&&order.approved_amount!==null)
+ const paymentQrAmount=Number(order.final_amount||order.approved_amount||0)
  const transitioned=(status:string)=>history.some(h=>h.to_status===status)||order.status===status
  const terminal=['COMPLETED','CUSTOMER_REJECTED','NO_FIX','CANCELLED'].includes(order.status)
  const repairSteps:WorkflowGuideStep[]=[
@@ -92,6 +94,7 @@ function RepairDetail({orderId,context,onBack}:{orderId:string;context:AppUserCo
   {['DIAGNOSING','WAITING_PART','REPAIRING'].includes(order.status)&&canUpdate?<button onClick={()=>setModal('nofix')} className="rounded-xl border border-red-900 px-3 py-2 text-sm text-red-300">Không sửa được</button>:null}
   {['DIAGNOSING','APPROVED','WAITING_PART','REPAIRING','QC'].includes(order.status)&&canUpdate?<button onClick={()=>setModal('warranty')} className="rounded-xl border border-violet-900 px-3 py-2 text-sm text-violet-300">Chuyển bảo hành</button>:null}
   {['RECEIVED','DIAGNOSING','QUOTED','AWAITING_CUSTOMER','APPROVED','WAITING_PART','REPAIRING'].includes(order.status)&&canCancel?<button onClick={()=>setModal('cancel')} className="rounded-xl border border-red-900 px-3 py-2 text-sm text-red-300">Hủy phiếu</button>:null}
+  {['READY','RETURNED'].includes(order.status)&&canPay&&paymentQrAmount>0?<button onClick={()=>setModal('payment-qr')} className="rounded-xl border border-cyan-700 px-3 py-2 text-sm font-semibold text-cyan-200">QR thanh toán {money(paymentQrAmount)}</button>:null}
  </div>
  <Err message={error}/>
  <WorkflowGuide title="Quy trình sửa chữa và bàn giao" steps={repairSteps} blockers={repairBlockers}/>
@@ -109,6 +112,7 @@ function RepairDetail({orderId,context,onBack}:{orderId:string;context:AppUserCo
  {modal==='nofix'?<Modal title="Không sửa được" onClose={()=>setModal(null)}><TextActionForm placeholder="Nhập lý do không sửa được…" label="Xác nhận không sửa được" onCancel={()=>setModal(null)} onSubmit={t=>textRpc('repair_no_fix',t)}/></Modal>:null}
  {modal==='warranty'?<Modal title="Chuyển bảo hành" onClose={()=>setModal(null)}><TextActionForm placeholder="Trung tâm/đơn vị nhận, nội dung chuyển…" label="Xác nhận chuyển bảo hành" onCancel={()=>setModal(null)} onSubmit={t=>textRpc('repair_warranty_transfer',t)}/></Modal>:null}
  {modal==='cancel'?<Modal title="Hủy phiếu sửa chữa" onClose={()=>setModal(null)}><TextActionForm placeholder="Lý do hủy…" label="Xác nhận hủy" onCancel={()=>setModal(null)} onSubmit={t=>textRpc('repair_cancel',t)}/></Modal>:null}
+ {modal==='payment-qr'?<Modal title="QR thanh toán sửa chữa" onClose={()=>setModal(null)}><PaymentQr amount={paymentQrAmount} orderCode={order.repair_code} canManageSettings={canManageSettings}/></Modal>:null}
  {modal==='decision'?<Modal title="Ghi nhận phản hồi của khách" onClose={()=>setModal(null)}><div className="space-y-4 p-1"><p className="text-sm text-slate-300">Chọn đúng phản hồi của khách về báo giá. Hệ thống sẽ chuyển phiếu sang bước phù hợp.</p><div className="grid gap-3 sm:grid-cols-2"><button type="button" onClick={()=>setModal('decision-approve')} className="rounded-xl bg-emerald-500 px-4 py-3 text-sm font-bold text-slate-950">Khách đồng ý báo giá</button><button type="button" onClick={()=>setModal('decision-reject')} className="rounded-xl border border-red-900 px-4 py-3 text-sm font-semibold text-red-300">Khách từ chối báo giá</button></div></div></Modal>:null}
  {modal==='decision-approve'?<Modal title="Khách đồng ý báo giá" onClose={()=>setModal(null)}><TextActionForm placeholder="Ghi chú phản hồi của khách…" label="Xác nhận khách đồng ý" onCancel={()=>setModal(null)} onSubmit={t=>decision(true,t)}/></Modal>:null}
  {modal==='decision-reject'?<Modal title="Khách từ chối báo giá" onClose={()=>setModal(null)}><TextActionForm placeholder="Lý do khách từ chối…" label="Xác nhận khách từ chối" onCancel={()=>setModal(null)} onSubmit={t=>decision(false,t)}/></Modal>:null}
