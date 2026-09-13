@@ -187,7 +187,7 @@ export default function App() {
   )
 
   const globalQuickActions = (
-    <div className="global-quick-actions" aria-label="Điều hướng nhanh">
+    <div className="global-quick-actions" aria-label="Điều hướng nhanh cố định">
       {canOpenDashboard ? (
         <button type="button" className="global-home-button" onClick={() => setModule('dashboard')} aria-label="Mở Tổng quan" aria-current={module === 'dashboard' ? 'page' : undefined}>
           <span aria-hidden="true">⌂</span><span>Tổng quan</span>
@@ -197,31 +197,33 @@ export default function App() {
     </div>
   )
 
-  const dashboardQuickActions = (
-    <div className="dashboard-quick-actions" aria-label="Điều hướng cố định sau tiêu đề">
-      {canOpenDashboard ? (
-        <button type="button" className="global-home-button" onClick={() => setModule('dashboard')} aria-label="Mở Tổng quan" aria-current="page">
-          <span aria-hidden="true">⌂</span><span>Tổng quan</span>
-        </button>
-      ) : null}
-      <QrCommandCenter context={authState.context} initialToken={initialQrToken} onNavigate={handleQrNavigate} triggerClassName="global-qr-button" />
-    </div>
+  const operationsHeader = (
+    <header className="operations-header">
+      <div className="operations-header-inner">
+        <div className="operations-title-block">
+          <div className="operations-brand">HomeTechVN</div>
+          <div className="operations-title-line">
+            <span className="operations-title">Tổng quan điều hành</span>
+            <span className="operations-timezone">Asia/Bangkok</span>
+          </div>
+        </div>
+        {globalQuickActions}
+      </div>
+    </header>
   )
 
   const withDashboard = (node: ReactNode) => (
-    <>
+    <div className="operations-app-shell">
       <DemoModeBanner />
-      {node}
-      {globalQuickActions}
+      {operationsHeader}
+      <div className="operations-module-content">{node}</div>
       {qrHandoffNotice}
-    </>
+    </div>
   )
 
   if (module === 'dashboard' && canOpenDashboard) {
-    return (
-      <>
-        <DemoModeBanner />
-        <DashboardPage
+    return withDashboard(
+      <DashboardPage
           context={authState.context}
           onOpenCrm={canOpenCrm ? () => setModule('crm') : undefined}
           onOpenInventory={canOpenInventory ? () => setModule('inventory') : undefined}
@@ -235,10 +237,7 @@ export default function App() {
           onOpenReports={canOpenReports ? () => setModule('reports') : undefined}
           onOpenAudit={canOpenAudit ? () => setModule('audit') : undefined}
           onOpenStaff={canOpenStaff ? () => setModule('staff') : undefined}
-          quickActions={dashboardQuickActions}
-        />
-        {qrHandoffNotice}
-      </>
+      />
     )
   }
 
