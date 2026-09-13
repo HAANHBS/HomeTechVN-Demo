@@ -311,7 +311,7 @@ create or replace function public.sale_add_item_v2(
 )
 returns jsonb
 language sql
-security definer
+security invoker
 set search_path=''
 as $$
   select private.sale_add_item_v2_impl(
@@ -329,7 +329,7 @@ create or replace function public.sale_update_item_v2(
 )
 returns jsonb
 language sql
-security definer
+security invoker
 set search_path=''
 as $$
   select private.sale_update_item_v2_impl(
@@ -380,7 +380,7 @@ create or replace function public.repair_create_quote_v2(
 )
 returns jsonb
 language sql
-security definer
+security invoker
 set search_path=''
 as $$
   select private.repair_create_quote_v2_impl(
@@ -426,6 +426,9 @@ revoke all on function private.repair_apply_selected_warranty_duration() from pu
 revoke all on function public.sale_add_item_v2(uuid,uuid,numeric,numeric,numeric,uuid[],integer) from public,anon,authenticated;
 revoke all on function public.sale_update_item_v2(uuid,numeric,numeric,numeric,uuid[],integer) from public,anon,authenticated;
 revoke all on function public.repair_create_quote_v2(uuid,numeric,numeric,numeric,date,text,integer) from public,anon,authenticated;
+grant execute on function private.sale_add_item_v2_impl(uuid,uuid,numeric,numeric,numeric,uuid[],integer) to authenticated;
+grant execute on function private.sale_update_item_v2_impl(uuid,numeric,numeric,numeric,uuid[],integer) to authenticated;
+grant execute on function private.repair_create_quote_v2_impl(uuid,numeric,numeric,numeric,date,text,integer) to authenticated;
 grant execute on function public.sale_add_item_v2(uuid,uuid,numeric,numeric,numeric,uuid[],integer) to authenticated;
 grant execute on function public.sale_update_item_v2(uuid,numeric,numeric,numeric,uuid[],integer) to authenticated;
 grant execute on function public.repair_create_quote_v2(uuid,numeric,numeric,numeric,date,text,integer) to authenticated;
