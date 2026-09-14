@@ -27,6 +27,8 @@ type AuthState =
   | { status: 'blocked'; session: Session; message: string }
 
 type Module = 'dashboard' | 'reports' | 'audit' | 'staff' | 'crm' | 'inventory' | 'sales' | 'repair' | 'checklist' | 'warranty' | 'service-license' | 'reminders' | 'notifications'
+type DashboardDays = 7 | 30 | 90
+type ModuleNavigationItem = { key: Module; label: string; title: string; enabled: boolean }
 
 type PublicWarrantyRoute = { matched: false } | { matched: true; token: string | null }
 
@@ -48,6 +50,8 @@ export default function App() {
   const [contextError, setContextError] = useState<string | null>(null)
   const [contextLoading, setContextLoading] = useState(false)
   const [module, setModule] = useState<Module>('dashboard')
+  const [dashboardDays, setDashboardDays] = useState<DashboardDays>(30)
+  const [moduleRevision, setModuleRevision] = useState(0)
   const [initialQrToken, setInitialQrToken] = useState<string | null>(readInternalQrToken)
   const [qrHandoff, setQrHandoff] = useState<{ target: QrResolved; action: QrAction } | null>(null)
   const publicWarrantyRoute = useMemo(readPublicWarrantyRoute, [])
@@ -160,6 +164,21 @@ export default function App() {
   const canOpenReminders = hasPermission(authState.context, 'notification.view') || hasPermission(authState.context, 'notification.manage')
   const canOpenNotifications = canOpenReminders
 
+  const moduleNavigation = ([
+    { key: 'crm', label: 'CRM', title: 'Khách hàng & thiết bị', enabled: canOpenCrm },
+    { key: 'inventory', label: 'Kho', title: 'Sản phẩm & kho', enabled: canOpenInventory },
+    { key: 'sales', label: 'Bán hàng', title: 'Bán hàng', enabled: canOpenSales },
+    { key: 'repair', label: 'Sửa chữa', title: 'Sửa chữa & kỹ thuật', enabled: canOpenRepair },
+    { key: 'checklist', label: 'Kiểm tra', title: 'Danh sách kiểm tra', enabled: canOpenChecklist },
+    { key: 'warranty', label: 'Bảo hành', title: 'Bảo hành', enabled: canOpenWarranty },
+    { key: 'service-license', label: 'Dịch vụ', title: 'Dịch vụ & bản quyền', enabled: canOpenServiceLicense },
+    { key: 'reminders', label: 'Nhắc việc', title: 'Nhắc việc', enabled: canOpenReminders },
+    { key: 'notifications', label: 'Thông báo', title: 'Thông báo', enabled: canOpenNotifications },
+    { key: 'reports', label: 'Báo cáo', title: 'Báo cáo', enabled: canOpenReports },
+    { key: 'audit', label: 'Nhật ký', title: 'Bảo mật & nhật ký', enabled: canOpenAudit },
+    { key: 'staff', label: 'Nhân viên', title: 'Nhân viên & phân quyền', enabled: canOpenStaff },
+  ] satisfies ModuleNavigationItem[]).filter((item) => item.enabled)
+
   function handleQrNavigate(route: QrRoute, target: QrResolved, action: QrAction) {
     setQrHandoff({ target, action })
     setInitialQrToken(null)
@@ -200,14 +219,57 @@ export default function App() {
   const operationsHeader = (
     <header className="operations-header">
       <div className="operations-header-inner">
-        <div className="operations-title-block">
-          <div className="operations-brand">HomeTechVN</div>
-          <div className="operations-title-line">
-            <span className="operations-title">Tổng quan điều hành</span>
-            <span className="operations-timezone">Asia/Bangkok</span>
+        <div className="operations-top-row">
+          <div className="operations-title-actions">
+            <div className="operations-title-block">
+              <div className="operations-brand">HomeTechVN</div>
+              <div className="operations-title-line">
+                <span className="operations-title">Tổng quan điều hành</span>
+                <span className="operations-timezone">Asia/Bangkok</span>
+              </div>
+            </div>
+            {globalQuickActions}
+          </div>
+          <div className="operations-user-actions">
+            <button type="button" onClick={() => setModuleRevision((value) => value + 1)} className="operations-refresh-button">Làm mới</button>
+            <div className="operations-user-summary">
+              <div>{authState.context.fullName || authState.context.email || 'Người dùng'}</div>
+              <div>{authState.context.roleName}</div>
+            </div>
+            <button type="button" onClick={() => void supabase.auth.signOut()} className="operations-signout-button">Đăng xuất</button>
           </div>
         </div>
-        {globalQuickActions}
+        <div className="operations-navigation-row">
+          <div className="operations-navigation-heading">
+            <div>
+              <div className="operations-navigation-title">Đi nhanh đến module</div>
+              <div className="operations-navigation-note">Module đang làm việc được đánh dấu màu xanh.</div>
+            </div>
+            {module === 'dashboard' ? (
+              <div className="operations-period" aria-label="Kỳ dữ liệu Tổng quan">
+                {([7, 30, 90] as const).map((value) => (
+                  <button key={value} type="button" onClick={() => setDashboardDays(value)} className={dashboardDays === value ? 'is-active' : undefined} aria-pressed={dashboardDays === value}>
+                    {value} ngày
+                  </button>
+                ))}
+              </div>
+            ) : null}
+          </div>
+          <nav className="operations-module-navigation" aria-label="Các module nghiệp vụ">
+            {moduleNavigation.map((item) => (
+              <button
+                key={item.key}
+                type="button"
+                title={item.title}
+                onClick={() => setModule(item.key)}
+                className={`operations-module-button${module === item.key ? ' is-active' : ''}`}
+                aria-current={module === item.key ? 'page' : undefined}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </div>
       </div>
     </header>
   )
@@ -216,7 +278,7 @@ export default function App() {
     <div className="operations-app-shell">
       <DemoModeBanner />
       {operationsHeader}
-      <div className="operations-module-content">{node}</div>
+      <div className="operations-module-content" key={`${module}:${moduleRevision}`}>{node}</div>
       {qrHandoffNotice}
     </div>
   )
@@ -224,19 +286,14 @@ export default function App() {
   if (module === 'dashboard' && canOpenDashboard) {
     return withDashboard(
       <DashboardPage
-          context={authState.context}
+          days={dashboardDays}
           onOpenCrm={canOpenCrm ? () => setModule('crm') : undefined}
           onOpenInventory={canOpenInventory ? () => setModule('inventory') : undefined}
           onOpenSales={canOpenSales ? () => setModule('sales') : undefined}
           onOpenRepair={canOpenRepair ? () => setModule('repair') : undefined}
-          onOpenChecklist={canOpenChecklist ? () => setModule('checklist') : undefined}
           onOpenWarranty={canOpenWarranty ? () => setModule('warranty') : undefined}
           onOpenServiceLicense={canOpenServiceLicense ? () => setModule('service-license') : undefined}
           onOpenReminders={canOpenReminders ? () => setModule('reminders') : undefined}
-          onOpenNotifications={canOpenNotifications ? () => setModule('notifications') : undefined}
-          onOpenReports={canOpenReports ? () => setModule('reports') : undefined}
-          onOpenAudit={canOpenAudit ? () => setModule('audit') : undefined}
-          onOpenStaff={canOpenStaff ? () => setModule('staff') : undefined}
       />
     )
   }
