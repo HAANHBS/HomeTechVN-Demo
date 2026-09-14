@@ -1,5 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react'
-import type { AppUserContext } from '../../lib/permissions'
+import { useCallback, useEffect, useState, type ReactNode } from 'react'
 import { supabase } from '../../lib/supabase'
 import { viPriority, viStatus } from '../../lib/vi'
 
@@ -31,14 +30,6 @@ type DashboardSnapshot = {
     repairs: Array<{ id: string; repair_code: string; status: string; priority: string; estimated_completion_at: string | null; ready_at: string | null; created_at: string; customer_name: string | null; rank_key: number }>
     reminders: Array<{ id: string; reminder_code: string; title: string; message: string; priority: string; due_at: string; source_type: string; source_label: string | null; priority_rank: number }>
   }
-}
-
-type NavItem = {
-  key: string
-  label: string
-  short: string
-  enabled: boolean
-  onClick?: () => void
 }
 
 function number(value: unknown) {
@@ -139,35 +130,24 @@ function StatusBars({ rows }: { rows: DashboardSnapshot['charts']['repair_status
 }
 
 export function DashboardPage({
-  context,
+  days,
   onOpenCrm,
   onOpenInventory,
   onOpenSales,
   onOpenRepair,
-  onOpenChecklist,
   onOpenWarranty,
   onOpenServiceLicense,
   onOpenReminders,
-  onOpenNotifications,
-  onOpenReports,
-  onOpenAudit,
-  onOpenStaff,
 }: {
-  context: AppUserContext
+  days: 7 | 30 | 90
   onOpenCrm?: () => void
   onOpenInventory?: () => void
   onOpenSales?: () => void
   onOpenRepair?: () => void
-  onOpenChecklist?: () => void
   onOpenWarranty?: () => void
   onOpenServiceLicense?: () => void
   onOpenReminders?: () => void
-  onOpenNotifications?: () => void
-  onOpenReports?: () => void
-  onOpenAudit?: () => void
-  onOpenStaff?: () => void
 }) {
-  const [days, setDays] = useState<7 | 30 | 90>(30)
   const [data, setData] = useState<DashboardSnapshot | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -188,21 +168,6 @@ export function DashboardPage({
 
   useEffect(() => { void load() }, [load])
 
-  const navItems = useMemo<NavItem[]>(() => [
-    { key: 'crm', label: 'Khách hàng & thiết bị', short: 'CRM', enabled: Boolean(onOpenCrm), onClick: onOpenCrm },
-    { key: 'inventory', label: 'Sản phẩm & kho', short: 'Kho', enabled: Boolean(onOpenInventory), onClick: onOpenInventory },
-    { key: 'sales', label: 'Bán hàng', short: 'Bán hàng', enabled: Boolean(onOpenSales), onClick: onOpenSales },
-    { key: 'repair', label: 'Sửa chữa', short: 'Sửa chữa', enabled: Boolean(onOpenRepair), onClick: onOpenRepair },
-    { key: 'checklist', label: 'Danh sách kiểm tra', short: 'Kiểm tra', enabled: Boolean(onOpenChecklist), onClick: onOpenChecklist },
-    { key: 'warranty', label: 'Bảo hành', short: 'Bảo hành', enabled: Boolean(onOpenWarranty), onClick: onOpenWarranty },
-    { key: 'service', label: 'Dịch vụ & bản quyền', short: 'Dịch vụ', enabled: Boolean(onOpenServiceLicense), onClick: onOpenServiceLicense },
-    { key: 'reminder', label: 'Nhắc việc', short: 'Nhắc việc', enabled: Boolean(onOpenReminders), onClick: onOpenReminders },
-    { key: 'notification', label: 'Thông báo', short: 'Thông báo', enabled: Boolean(onOpenNotifications), onClick: onOpenNotifications },
-    { key: 'reports', label: 'Báo cáo', short: 'Báo cáo', enabled: Boolean(onOpenReports), onClick: onOpenReports },
-    { key: 'audit', label: 'Bảo mật & nhật ký', short: 'Nhật ký', enabled: Boolean(onOpenAudit), onClick: onOpenAudit },
-    { key: 'staff', label: 'Nhân viên & phân quyền', short: 'Nhân viên', enabled: Boolean(onOpenStaff), onClick: onOpenStaff },
-  ].filter((x) => x.enabled), [onOpenAudit, onOpenChecklist, onOpenCrm, onOpenInventory, onOpenNotifications, onOpenReminders, onOpenRepair, onOpenReports, onOpenSales, onOpenServiceLicense, onOpenStaff, onOpenWarranty])
-
   const sales = data?.kpis.sales
   const repairs = data?.kpis.repairs
   const inventory = data?.kpis.inventory
@@ -214,27 +179,7 @@ export function DashboardPage({
   const customers = data?.kpis.customers
 
   return <main className="min-h-screen bg-slate-950 text-slate-200">
-    <div className="border-b border-slate-800/90 bg-slate-950/90 px-3 py-2 sm:px-6">
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-end gap-2">
-          <button type="button" onClick={() => void load()} disabled={loading} className="rounded-xl border border-slate-700 px-3 py-2 text-sm hover:bg-slate-800 disabled:opacity-50">{loading ? 'Đang tải…' : 'Làm mới'}</button>
-          <div className="hidden text-right sm:block"><div className="max-w-48 truncate text-sm font-medium text-white">{context.fullName || context.email || 'Người dùng'}</div><div className="text-xs text-slate-500">{context.roleName}</div></div>
-          <button type="button" onClick={() => void supabase.auth.signOut()} className="rounded-xl border border-slate-700 px-3 py-2 text-sm">Đăng xuất</button>
-      </div>
-    </div>
-
     <div className="mx-auto max-w-7xl space-y-5 px-3 py-5 pb-24 sm:px-6 sm:py-6 lg:pb-8">
-      <section className="rounded-3xl border border-slate-800 bg-slate-900/90 p-3 sm:p-4">
-        <div className="flex items-center justify-between gap-3">
-          <div><h2 className="text-sm font-semibold text-white">Đi nhanh đến module</h2><p className="mt-1 hidden text-xs text-slate-500 sm:block">Tự động ẩn module không có quyền.</p></div>
-          <div className="flex rounded-xl border border-slate-700 bg-slate-950 p-1">
-            {([7, 30, 90] as const).map((value) => <button key={value} type="button" onClick={() => setDays(value)} className={`min-h-9 rounded-lg px-3 py-1 text-xs font-semibold ${days === value ? 'bg-cyan-500 text-slate-950' : 'text-slate-400'}`}>{value} ngày</button>)}
-          </div>
-        </div>
-        <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-          {navItems.map((item) => <button key={item.key} type="button" onClick={item.onClick} title={item.label} className="shrink-0 rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-200 hover:border-cyan-800 hover:text-cyan-300">{item.short}</button>)}
-        </div>
-      </section>
-
       <ErrorPanel message={error} />
 
       {data ? <>
