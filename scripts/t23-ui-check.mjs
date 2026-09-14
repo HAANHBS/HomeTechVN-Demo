@@ -39,11 +39,8 @@ const migration = requireTokens('supabase/migrations/20260913101000_t23_multi_ro
 if (migration.includes('pm.is_active')) fail('permissions has no is_active column')
 if (!migration.includes('grant execute on function public.sale_add_item_v2')) fail('v2 sale RPC grant missing')
 
-const dashboard = requireTokens('app/src/features/dashboard/DashboardPage.tsx', [
-  'Làm mới',
-  'Đăng xuất',
-])
-if (dashboard.includes('{quickActions}') || dashboard.includes('dashboard-quick-actions')) fail('dashboard must not own a duplicate quick-action group')
+const dashboard = read('app/src/features/dashboard/DashboardPage.tsx')
+if (dashboard.includes('{quickActions}') || dashboard.includes('dashboard-quick-actions') || dashboard.includes('Đi nhanh đến module')) fail('dashboard must not own duplicate shell controls or module navigation')
 const app = requireTokens('app/src/App.tsx', [
   'const operationsHeader',
   'className="operations-header"',
@@ -51,13 +48,21 @@ const app = requireTokens('app/src/App.tsx', [
   'Tổng quan điều hành',
   'Asia/Bangkok',
   'aria-label="Điều hướng nhanh cố định"',
-  '<div className="operations-module-content">{node}</div>',
+  'className="operations-user-actions"',
+  'className="operations-navigation-row"',
+  'className={`operations-module-button${module === item.key ? \' is-active\' : \'\'}`}',
+  'aria-current={module === item.key ? \'page\' : undefined}',
+  'key={`${module}:${moduleRevision}`}',
+  'Làm mới',
+  'Đăng xuất',
 ])
 if ((app.match(/<QrCommandCenter context=\{authState\.context\}/g) ?? []).length !== 1) fail('all modules must share exactly one QR command trigger')
 requireTokens('app/src/index.css', [
   '.operations-header {',
   'position: sticky;',
   '.operations-header-inner {',
+  '.operations-module-button.is-active {',
+  '.operations-user-actions {',
   '.operations-module-content > main > header.sticky {',
 ])
 
