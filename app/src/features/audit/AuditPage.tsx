@@ -206,24 +206,18 @@ export function AuditPage({ context }: { context: AppUserContext }) {
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-200">
-      <header className="sticky top-0 z-30 border-b border-slate-800/90 bg-slate-950/90 px-3 py-3 backdrop-blur-xl sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN · T16</div>
-            <h1 className="mt-1 text-lg font-bold text-white sm:text-xl">Bảo mật & nhật ký kiểm toán</h1>
-          </div>
+      <div className="mx-auto max-w-7xl space-y-5 px-3 py-5 pb-24 sm:px-6 lg:pb-8">
+        <div className="flex justify-end">
           <button
             type="button"
             onClick={() => void Promise.all([load(null, false), loadSnapshot()])}
             disabled={loading || snapshotLoading}
             className="rounded-xl border border-slate-700 px-3 py-2 text-sm hover:border-cyan-800 disabled:opacity-50"
           >
-            Làm mới
+            Làm mới dữ liệu bảo mật
           </button>
         </div>
-      </header>
 
-      <div className="mx-auto max-w-7xl space-y-5 px-3 py-5 pb-24 sm:px-6 lg:pb-8">
         <section className="rounded-3xl border border-slate-800 bg-slate-900/90 p-4 sm:p-5">
           <div className="mb-4">
             <h2 className="font-semibold text-white">Security posture</h2>
