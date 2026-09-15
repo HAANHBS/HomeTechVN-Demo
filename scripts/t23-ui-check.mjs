@@ -63,8 +63,28 @@ requireTokens('app/src/index.css', [
   '.operations-header-inner {',
   '.operations-module-button.is-active {',
   '.operations-user-actions {',
-  '.operations-module-content > main > header.sticky {',
 ])
+
+const shellManagedPages = [
+  'app/src/features/crm/CrmPage.tsx',
+  'app/src/features/inventory/InventoryPage.tsx',
+  'app/src/features/sales/SalesPage.tsx',
+  'app/src/features/repair/RepairPage.tsx',
+  'app/src/features/checklist/ChecklistPage.tsx',
+  'app/src/features/warranty/WarrantyPage.tsx',
+  'app/src/features/service_license/ServiceLicensePage.tsx',
+  'app/src/features/reminders/ReminderPage.tsx',
+  'app/src/features/notifications/NotificationPage.tsx',
+  'app/src/features/reports/ReportsPage.tsx',
+  'app/src/features/audit/AuditPage.tsx',
+  'app/src/features/staff/StaffPage.tsx',
+]
+for (const relative of shellManagedPages) {
+  const source = read(relative)
+  if (source.includes('<header className=')) fail(`${relative} must use the shared operations-header instead of duplicate page chrome`)
+}
+requireTokens('app/src/features/reports/ReportsPage.tsx', ['Xuất CSV', 'In báo cáo', 'print:hidden'])
+requireTokens('app/src/features/audit/AuditPage.tsx', ['Làm mới dữ liệu bảo mật', 'Promise.all([load(null, false), loadSnapshot()])'])
 
 requireTokens('app/src/features/staff/StaffPage.tsx', [
   ".from('profile_roles')",
@@ -122,6 +142,7 @@ if (!rootPackage.scripts?.['t23:verify']) fail('missing package script t23:verif
 
 if (!failed) {
   console.log('T23 FIXED DASHBOARD QUICK ACTIONS: PASS')
+  console.log('T23 SINGLE OPERATIONS HEADER ACROSS ALL MODULES: PASS')
   console.log('T23 MULTI-ROLE RBAC/RLS CONTRACT: PASS')
   console.log('T23 SALES + REPAIR WARRANTY DURATION: PASS')
   console.log('T23 WARRANTY QR LABEL + MASKED BUYER: PASS')
