@@ -352,32 +352,21 @@ export function ReportsPage({
 
   return (
     <main className="min-h-screen bg-slate-950 text-slate-200 print:bg-white print:text-black">
-      <header className="sticky top-0 z-40 border-b border-slate-800/90 bg-slate-950/90 px-3 py-3 backdrop-blur-xl print:static print:border-0 print:bg-white sm:px-6">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-3">
-          <div>
-            <div className="text-xs font-semibold uppercase tracking-[0.24em] text-cyan-400">HomeTechVN</div>
-            <h1 className="mt-1 text-lg font-bold text-white print:text-black sm:text-xl">Báo cáo điều hành</h1>
-          </div>
-          <div className="flex items-center gap-2 print:hidden">
-            <button
-              type="button"
-              onClick={() => downloadCsv(`hometechvn-${tab}-${startDate}-${endDate}.csv`, exportRows)}
-              disabled={!exportRows.length}
-              className="rounded-xl border border-cyan-900 px-3 py-2 text-sm text-cyan-300 disabled:opacity-40"
-            >
-              Xuất CSV
-            </button>
-            <button type="button" onClick={() => window.print()} className="rounded-xl border border-slate-700 px-3 py-2 text-sm">
-              In báo cáo
-            </button>
-            <button type="button" onClick={() => void supabase.auth.signOut()} className="rounded-xl border border-slate-700 px-3 py-2 text-sm">
-              Đăng xuất
-            </button>
-          </div>
-        </div>
-      </header>
-
       <div className="mx-auto max-w-7xl space-y-5 px-3 py-5 pb-24 sm:px-6 sm:py-6 lg:pb-8">
+        <div className="flex flex-wrap justify-end gap-2 print:hidden">
+          <button
+            type="button"
+            onClick={() => downloadCsv(`hometechvn-${tab}-${startDate}-${endDate}.csv`, exportRows)}
+            disabled={!exportRows.length}
+            className="rounded-xl border border-cyan-900 px-3 py-2 text-sm text-cyan-300 disabled:opacity-40"
+          >
+            Xuất CSV
+          </button>
+          <button type="button" onClick={() => window.print()} className="rounded-xl border border-slate-700 px-3 py-2 text-sm">
+            In báo cáo
+          </button>
+        </div>
+
         <form onSubmit={submit} className="rounded-3xl border border-slate-800 bg-slate-900/90 p-4 print:border-slate-300 print:bg-white sm:p-5">
           <div className="grid gap-3 md:grid-cols-[1fr_1fr_180px_auto]">
             <label className="text-sm font-medium">
