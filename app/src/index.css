@@ -303,10 +303,6 @@ button {
   white-space: nowrap;
 }
 
-.operations-module-content > main > header.sticky {
-  position: static;
-}
-
 .global-home-button,
 .global-qr-button {
   display: inline-flex;
